@@ -47,11 +47,25 @@ below as they are added.
 - Art direction locked: **moonlit low-poly** — blue-violet fog, warm lantern
   glow, low-poly props.
 - Baseline commit recorded for judging.
+- Production deploy live: https://successful-ermine-668.convex.site
+- Added the Kenney Graveyard Kit (CC0) to `public/models/`.
+- **Convex backend built and verified.** Tables for graves, flower events, and
+  visitors. `graves.bury` allocates the next plot inside the mutation
+  transaction, so simultaneous burials cannot collide. `graves.leaveFlower` is
+  deduplicated per visitor. `visitors.move` records one destination event per
+  click rather than streaming positions. A cron sweeps stale visitors every
+  5 minutes. Server-side validation covers name and epitaph length, a cause-of-
+  death allowlist, a leetspeak-aware word filter, a burial limit per visitor,
+  and report-to-hide.
 
 ---
 
 ## Credits
 
 - Burning Token MCP — official rules, track briefs, and status.
-- Remaining third-party assets (3D kits, fonts, audio) will be listed here with
-  their licenses as they are added.
+- **Kenney Graveyard Kit 5.0** (www.kenney.nl) — CC0 / public domain. 91 low-poly
+  GLB models used for headstones, crypts, fencing, lanterns, trees, and the
+  ghost visitor avatar. License file kept at
+  `public/models/kenney-graveyard/License.txt`.
+- Remaining third-party assets (fonts, audio) will be listed here with their
+  licenses as they are added.

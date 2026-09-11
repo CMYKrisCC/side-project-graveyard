@@ -8,13 +8,25 @@
  * @module
  */
 
+import type * as causes from "../causes.js";
+import type * as crons from "../crons.js";
+import type * as graves from "../graves.js";
+import type * as moderation from "../moderation.js";
+import type * as visitors from "../visitors.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  causes: typeof causes;
+  crons: typeof crons;
+  graves: typeof graves;
+  moderation: typeof moderation;
+  visitors: typeof visitors;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.
