@@ -1,33 +1,64 @@
+import { Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import { useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
+import Graves from "./Graves";
+import BuryForm from "./BuryForm";
 
-export default function App() {
+function Scene() {
   return (
     <>
-      <Canvas camera={{ position: [0, 2, 6], fov: 45 }} dpr={[1, 2]}>
-        <color attach="background" args={["#0b0b10"]} />
-        <fog attach="fog" args={["#0b0b10", 6, 18]} />
-        <ambientLight intensity={0.3} />
-        <directionalLight position={[3, 6, 2]} intensity={1.2} />
+      <color attach="background" args={["#070710"]} />
+      <fog attach="fog" args={["#0d0d1c", 14, 52]} />
 
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[60, 60]} />
-          <meshStandardMaterial color="#1a1a22" />
-        </mesh>
+      <hemisphereLight args={["#6f7cc4", "#10101c", 0.5]} />
+      <directionalLight position={[-12, 18, 6]} intensity={0.9} color="#aebaff" />
 
-        <mesh position={[0, 0.6, 0]}>
-          <boxGeometry args={[0.8, 1.2, 0.18]} />
-          <meshStandardMaterial color="#8a8a94" />
-        </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[160, 160]} />
+        <meshStandardMaterial color="#15151f" />
+      </mesh>
 
-        <OrbitControls
-          enablePan={false}
-          maxPolarAngle={Math.PI / 2.1}
-          minDistance={3}
-          maxDistance={12}
-        />
+      <Suspense fallback={null}>
+        <Graves />
+      </Suspense>
+
+      <OrbitControls
+        enablePan={false}
+        minDistance={8}
+        maxDistance={44}
+        maxPolarAngle={Math.PI / 2.15}
+        target={[0, 1.6, 0]}
+      />
+    </>
+  );
+}
+
+export default function App() {
+  const [burying, setBurying] = useState(false);
+  const graves = useQuery(api.graves.list);
+
+  return (
+    <>
+      <Canvas shadows camera={{ position: [0, 5, 15], fov: 45 }} dpr={[1, 2]}>
+        <Scene />
       </Canvas>
-      <div className="title">Side Project Graveyard</div>
+
+      <header className="hud">
+        <h1>Side Project Graveyard</h1>
+        <p>
+          {graves === undefined
+            ? "opening the gate…"
+            : `${graves.length} ${graves.length === 1 ? "project rests" : "projects rest"} here`}
+        </p>
+      </header>
+
+      <button className="bury-cta" onClick={() => setBurying(true)}>
+        Bury a project
+      </button>
+
+      {burying && <BuryForm onClose={() => setBurying(false)} />}
     </>
   );
 }
