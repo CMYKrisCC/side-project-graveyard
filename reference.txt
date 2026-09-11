@@ -1,0 +1,14 @@
+Hackathon Dashboard Link:
+https://app.burningtoken.dev/dashboard
+
+Projects (create/join here — required before you can submit):
+https://app.burningtoken.dev/dashboard/projects
+
+DEADLINE (global): Sunday September 13, 2026 · 23:59 ART (UTC-3)
+  = September 13 · 7:59 PM PDT
+  = 2026-09-14T02:59:00Z
+
+Note: the SF in-person deadline (Sept 5, 4:00 PM PDT) has passed; that was the
+local in-person judging track only. Global competition is still open.
+
+Full rules and track briefs saved in docs/hackathon/

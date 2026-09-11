@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-tier="0">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Rage Click</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <main id="stage" class="stage">
+    <p class="taunt" id="taunt">go ahead, tap it.</p>
+
+    <div class="rage-meter" aria-hidden="true">
+      <div class="rage-meter__fill" id="rage-fill"></div>
+    </div>
+
+    <button id="target" class="target" aria-label="Click the face to make it angrier">
+      <span class="face">
+        <span class="eye eye--left"></span>
+        <span class="eye eye--right"></span>
+        <span class="mouth"></span>
+      </span>
+    </button>
+
+    <svg class="cracks" id="cracks" viewBox="0 0 400 400" preserveAspectRatio="none" aria-hidden="true">
+      <path class="crack" data-threshold="0.35" d="M200,200 L140,90 L110,40" />
+      <path class="crack" data-threshold="0.35" d="M200,200 L260,80 L300,20" />
+      <path class="crack" data-threshold="0.5" d="M200,200 L60,220 L10,190" />
+      <path class="crack" data-threshold="0.5" d="M200,200 L340,230 L390,270" />
+      <path class="crack" data-threshold="0.65" d="M200,200 L120,320 L90,390" />
+      <path class="crack" data-threshold="0.65" d="M200,200 L290,330 L330,395" />
+      <path class="crack" data-threshold="0.8" d="M200,200 L200,60 L215,10" />
+      <path class="crack" data-threshold="0.8" d="M200,200 L60,150 L5,120" />
+      <path class="crack" data-threshold="0.9" d="M200,200 L340,160 L395,140" />
+      <path class="crack" data-threshold="0.9" d="M200,200 L180,350 L160,398" />
+    </svg>
+  </main>
+
+  <section id="surrender" class="surrender" hidden>
+    <h1 class="surrender__title">IT SURRENDERS.</h1>
+    <p class="surrender__msg" id="surrender-msg"></p>
+    <button id="restart" class="restart">do it again</button>
+  </section>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
