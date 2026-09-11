@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Vector3 } from "three";
+import { Box3, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
 import { useQuery, useMutation } from "convex/react";
 import { Billboard, Clone, Html, Text, useGLTF } from "@react-three/drei";
@@ -26,6 +26,18 @@ const STYLES = [
 const modelPath = (style) => `/models/kenney-graveyard/${STYLES[style % STYLES.length]}.glb`;
 
 STYLES.forEach((_, i) => useGLTF.preload(modelPath(i)));
+
+const STONE_SCALE = 2.2;
+const heightCache = new Map();
+
+// Stones differ a lot in height — an obelisk would otherwise grow straight
+// through the inscription — so each model's own top decides where its text sits.
+function stoneHeight(path, scene) {
+  if (!heightCache.has(path)) {
+    heightCache.set(path, new Box3().setFromObject(scene).max.y);
+  }
+  return heightCache.get(path) * STONE_SCALE;
+}
 
 const NAME_SIZE = 0.26;
 const NAME_TOP = 0.62;
@@ -97,11 +109,13 @@ function Inscription({ grave }) {
 }
 
 function Grave({ grave, onFlower }) {
-  const { scene } = useGLTF(modelPath(grave.style));
+  const path = modelPath(grave.style);
+  const { scene } = useGLTF(path);
   const { x, z, angle } = plotPosition(grave.plot);
   const [hovered, setHovered] = useState(false);
   const inscription = useRef();
-  const anchor = useMemo(() => new Vector3(x, 2.2, z), [x, z]);
+  const textY = stoneHeight(path, scene) + 0.45;
+  const anchor = useMemo(() => new Vector3(x, textY, z), [x, textY, z]);
 
   useFrame(({ camera }) => {
     if (inscription.current) {
@@ -112,7 +126,7 @@ function Grave({ grave, onFlower }) {
   return (
     <>
       <group position={[x, 0, z]} rotation={[0, angle, 0]}>
-        <Clone object={scene} scale={2.2} castShadow receiveShadow />
+        <Clone object={scene} scale={STONE_SCALE} castShadow receiveShadow />
 
         <mesh
           position={[0, 1.1, 0.3]}
@@ -147,11 +161,11 @@ function Grave({ grave, onFlower }) {
         )}
       </group>
 
-      <Billboard ref={inscription} position={[x, 2.2, z]}>
+      <Billboard ref={inscription} position={[x, textY, z]}>
         <Inscription grave={grave} />
 
         {hovered && grave.epitaph && (
-          <Html center position={[0, -0.5, 0]} distanceFactor={12} zIndexRange={[20, 0]}>
+          <Html center position={[0, -0.78, 0]} distanceFactor={9} zIndexRange={[20, 0]}>
             <div className="epitaph">{`“${grave.epitaph}”`}</div>
           </Html>
         )}
