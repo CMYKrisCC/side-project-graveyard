@@ -43,14 +43,14 @@ export const bury = mutation({
     sessionId: v.string(),
   },
   handler: async (ctx, args) => {
-    const name = sanitize(args.name, 40);
+    const name = sanitize(args.name, 50);
     const epitaph = sanitize(args.epitaph, 80);
 
     if (name.length === 0) throw new Error("Give the project a name.");
     if (!isClean(name) || !isClean(epitaph)) {
       throw new Error("Let's keep it printable.");
     }
-    if (!CAUSES.includes(args.cause as (typeof CAUSES)[number])) {
+    if (!CAUSES.includes(args.cause)) {
       throw new Error("Pick a cause of death from the list.");
     }
 

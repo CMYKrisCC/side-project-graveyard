@@ -1,6 +1,9 @@
-const FIRST_RING_RADIUS = 6;
-const RING_GAP = 3.4;
-const GRAVE_GAP = 2.8;
+// Spacing is set by the inscription, not the headstone: each grave's text block
+// is about 3 units wide, so plots have to clear that or neighbouring
+// inscriptions collide once they turn to face the camera.
+const FIRST_RING_RADIUS = 9;
+const RING_GAP = 5;
+const GRAVE_GAP = 5.2;
 
 // A plot number is all we store — position is derived, so two graves can never
 // occupy the same spot and the cemetery grows outward in rings from the gate.

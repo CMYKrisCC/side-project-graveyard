@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { CAUSES } from "../convex/causes";
+import { CAUSE_GROUPS, CAUSES } from "../convex/causes";
 import { getSessionId } from "./session";
+import { ChevronDownIcon, CloseIcon, GravestoneIcon } from "./icons";
 
 const THIS_YEAR = new Date().getFullYear();
 
 export default function BuryForm({ onClose }) {
   const bury = useMutation(api.graves.bury);
   const [name, setName] = useState("");
-  const [bornYear, setBornYear] = useState(THIS_YEAR);
+  const [bornYear, setBornYear] = useState(THIS_YEAR - 1);
   const [diedYear, setDiedYear] = useState(THIS_YEAR);
   const [cause, setCause] = useState(CAUSES[0]);
   const [epitaph, setEpitaph] = useState("");
@@ -41,22 +42,32 @@ export default function BuryForm({ onClose }) {
   return (
     <div className="scrim" onClick={onClose}>
       <form className="panel" onSubmit={submit} onClick={(event) => event.stopPropagation()}>
-        <h2>Bury a project</h2>
+        <header className="panel__head">
+          <h2>
+            <GravestoneIcon />
+            Laying your project to rest
+          </h2>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
+            <CloseIcon />
+          </button>
+        </header>
 
-        <label>
-          Name
+        <label className="field">
+          <span className="field__label">
+            Project name <em>50 characters max.</em>
+          </span>
           <input
             autoFocus
             value={name}
-            maxLength={40}
-            placeholder="Portfolio v3"
+            maxLength={50}
+            placeholder="Type here..."
             onChange={(event) => setName(event.target.value)}
           />
         </label>
 
         <div className="row">
-          <label>
-            Born
+          <label className="field">
+            <span className="field__label">Born</span>
             <input
               type="number"
               value={bornYear}
@@ -65,8 +76,8 @@ export default function BuryForm({ onClose }) {
               onChange={(event) => setBornYear(event.target.value)}
             />
           </label>
-          <label>
-            Died
+          <label className="field">
+            <span className="field__label">Died</span>
             <input
               type="number"
               value={diedYear}
@@ -77,23 +88,32 @@ export default function BuryForm({ onClose }) {
           </label>
         </div>
 
-        <label>
-          Cause of death
-          <select value={cause} onChange={(event) => setCause(event.target.value)}>
-            {CAUSES.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+        <label className="field">
+          <span className="field__label">Cause of death</span>
+          <span className="select">
+            <select value={cause} onChange={(event) => setCause(event.target.value)}>
+              {CAUSE_GROUPS.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.causes.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <ChevronDownIcon className="select__chevron" />
+          </span>
         </label>
 
-        <label>
-          Epitaph <span className="hint">optional</span>
+        <label className="field">
+          <span className="field__label">
+            Epitaph <em>(Optional)</em>
+          </span>
           <input
             value={epitaph}
             maxLength={80}
-            placeholder="the grid was never right"
+            placeholder="Type here..."
             onChange={(event) => setEpitaph(event.target.value)}
           />
         </label>
@@ -105,7 +125,7 @@ export default function BuryForm({ onClose }) {
             Cancel
           </button>
           <button type="submit" disabled={busy || name.trim().length === 0}>
-            {busy ? "Digging…" : "Bury it"}
+            {busy ? "Digging…" : "Bury Your Project"}
           </button>
         </div>
       </form>

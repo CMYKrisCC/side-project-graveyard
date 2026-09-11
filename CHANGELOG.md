@@ -57,6 +57,15 @@ below as they are added.
   5 minutes. Server-side validation covers name and epitaph length, a cause-of-
   death allowlist, a leetspeak-aware word filter, a burial limit per visitor,
   and report-to-hide.
+- Graveyard renders from the live query; verified in two isolated browser
+  sessions that a burial in one appears in the other with no refresh.
+- **Design pass on the inscription and burial flow** (direction by Kris):
+  headstones now carry a randomised memorial line, the project name in Cinzel,
+  and the cause and dates in Manrope. Inscriptions billboard toward the camera
+  and only render within reading distance; plot spacing was widened so
+  neighbouring inscriptions cannot collide. Burial form rebuilt with the
+  cause-of-death list grouped into six categories, and hovering a grave now
+  reveals its epitaph.
 
 ---
 
@@ -67,5 +76,8 @@ below as they are added.
   GLB models used for headstones, crypts, fencing, lanterns, trees, and the
   ghost visitor avatar. License file kept at
   `public/models/kenney-graveyard/License.txt`.
-- Remaining third-party assets (fonts, audio) will be listed here with their
-  licenses as they are added.
+- **Cinzel** (Bold) and **Manrope** (Regular, SemiBold) — SIL Open Font License
+  1.1, via Google Fonts. Self-hosted in `public/fonts/` and used for both the
+  3D headstone inscriptions and the interface.
+- Remaining third-party assets (audio) will be listed here with their licenses
+  as they are added.

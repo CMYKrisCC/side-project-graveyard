@@ -27,7 +27,7 @@ function Scene() {
       <OrbitControls
         enablePan={false}
         minDistance={8}
-        maxDistance={44}
+        maxDistance={60}
         maxPolarAngle={Math.PI / 2.15}
         target={[0, 1.6, 0]}
       />
@@ -41,7 +41,7 @@ export default function App() {
 
   return (
     <>
-      <Canvas shadows camera={{ position: [0, 5, 15], fov: 45 }} dpr={[1, 2]}>
+      <Canvas shadows camera={{ position: [0, 6, 21], fov: 45 }} dpr={[1, 2]}>
         <Scene />
       </Canvas>
 
