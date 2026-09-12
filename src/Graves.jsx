@@ -7,6 +7,7 @@ import { api } from "../convex/_generated/api";
 import { plotPosition } from "./layout";
 import { memorialFor } from "./memorials";
 import { getSessionId } from "./session";
+import { audio } from "./audio";
 
 const CINZEL = "/fonts/Cinzel-Bold.ttf";
 const MANROPE = "/fonts/Manrope-Regular.ttf";
@@ -180,7 +181,10 @@ export default function Graves() {
 
   if (!graves) return null;
 
-  const onFlower = (graveId) => leaveFlower({ graveId, sessionId: getSessionId() });
+  const onFlower = async (graveId) => {
+    const result = await leaveFlower({ graveId, sessionId: getSessionId() });
+    if (result?.added) audio.chime();
+  };
 
   return graves.map((grave) => <Grave key={grave._id} grave={grave} onFlower={onFlower} />);
 }

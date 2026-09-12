@@ -1,4 +1,4 @@
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Vector3 } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Sparkles, Stars } from "@react-three/drei";
@@ -9,6 +9,8 @@ import Graves from "./Graves";
 import Scenery from "./Scenery";
 import Visitors from "./Visitors";
 import BuryForm from "./BuryForm";
+import { audio } from "./audio";
+import { SoundOffIcon, SoundOnIcon } from "./icons";
 
 function FollowCamera({ controls, ownPositionRef }) {
   useFrame(() => {
@@ -92,9 +94,46 @@ function Scene({ moveRef, ownPositionRef }) {
 
 export default function App() {
   const [burying, setBurying] = useState(false);
+  const [muted, setMuted] = useState(false);
   const graves = useQuery(api.graves.list);
   const moveRef = useRef(() => {});
   const ownPositionRef = useRef(new Vector3(0, 0, 3));
+  const knownGraves = useRef(null);
+
+  // Browsers refuse to start audio until the visitor has interacted.
+  useEffect(() => {
+    const begin = () => audio.start();
+    window.addEventListener("pointerdown", begin, { once: true });
+    window.addEventListener("keydown", begin, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", begin);
+      window.removeEventListener("keydown", begin);
+    };
+  }, []);
+
+  // A bell for every burial, including other people's — it's how you find out
+  // someone else is here.
+  useEffect(() => {
+    if (!graves) return;
+
+    const ids = new Set(graves.map((grave) => grave._id));
+    if (knownGraves.current === null) {
+      knownGraves.current = ids;
+      return;
+    }
+
+    const buried = [...ids].some((id) => !knownGraves.current.has(id));
+    knownGraves.current = ids;
+    if (buried) audio.toll();
+  }, [graves]);
+
+  const toggleSound = () => {
+    audio.start();
+    setMuted((current) => {
+      audio.setMuted(!current);
+      return !current;
+    });
+  };
 
   return (
     <>
@@ -110,6 +149,15 @@ export default function App() {
             : `${graves.length} ${graves.length === 1 ? "project rests" : "projects rest"} here`}
         </p>
       </header>
+
+      <button
+        className="sound-toggle"
+        onClick={toggleSound}
+        aria-label={muted ? "Unmute" : "Mute"}
+        title={muted ? "Unmute" : "Mute"}
+      >
+        {muted ? <SoundOffIcon /> : <SoundOnIcon />}
+      </button>
 
       <p className="hint-bar">Click the ground to walk · click a grave to leave a flower</p>
 
