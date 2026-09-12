@@ -111,9 +111,11 @@ Anything added here goes in `CHANGELOG.md` under Credits.
   relative path; that folder must ship alongside them.
 - Cinzel + Manrope — OFL, self-hosted in `public/fonts/`. Troika needs TTF or
   WOFF, not WOFF2.
-- "Spirits of the Moor" by Geoff Harvey (Pixabay) — credited in-app. Source file
-  in `assets-source/music/`, which is deliberately outside `public/` so the
-  4MB original isn't shipped alongside the 1.6MB encode.
+- "Spirits of the Moor" by Geoff Harvey (Pixabay) — credited in-app. The 1.6MB
+  encode in `public/music/` is what ships. The 4MB original lives in
+  `assets-source/music/`, which is **git-ignored and must never be committed**:
+  the repository is public, and Pixabay's license forbids redistributing the
+  source file on its own. It was scrubbed from history before the first push.
 
 Nothing loads from a CDN at runtime. Fonts, models, and audio are all
 self-hosted so nothing can 404 while a judge is looking.

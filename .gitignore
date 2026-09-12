@@ -5,3 +5,7 @@ dist/
 *.log
 .env.local
 .env*.local
+
+# Licensed source media stays local. Pixabay's license forbids redistributing
+# the original file on its own, and this repository is public.
+assets-source/

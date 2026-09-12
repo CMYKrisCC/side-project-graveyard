@@ -90,6 +90,7 @@ below as they are added.
   3D headstone inscriptions and the interface.
 - **"Spirits of the Moor" by Geoff Harvey**, from Pixabay
   (https://pixabay.com/users/geoffharvey-9096471/) under the Pixabay Content
-  License. Used as the looping background score, credited in-app. The source
-  file is kept in `assets-source/music/`; the shipped copy is re-encoded to
-  96 kbps to keep the download small.
+  License. Used as the looping background score, credited in-app. The shipped
+  copy in `public/music/` is re-encoded to 96 kbps to keep the download small.
+  The original source file is kept locally and is not part of this repository,
+  since the license does not permit redistributing it on its own.
