@@ -1,0 +1,142 @@
+[
+  {
+    "name": "Cool Beans",
+    "bornYear": 2024,
+    "diedYear": 2025,
+    "cause": "Ran out of coffee.",
+    "epitaph": "A bean is a terrible thing to waste."
+  },
+  {
+    "name": "Git Over It",
+    "bornYear": 2023,
+    "diedYear": 2024,
+    "cause": "The API bill arrived.",
+    "epitaph": "Committed too soon. Never pushed through."
+  },
+  {
+    "name": "Ctrl Alt Defeat",
+    "bornYear": 2024,
+    "diedYear": 2025,
+    "cause": "Vibe coded too close to the sun.",
+    "epitaph": "It tried turning itself off and on again. Mostly off."
+  },
+  {
+    "name": "Shprlfy+",
+    "bornYear": 2024,
+    "diedYear": 2024,
+    "cause": "Motivation not found.",
+    "epitaph": "We couldn't afford the vowels in the name."
+  },
+  {
+    "name": "Grave Expectations",
+    "bornYear": 2022,
+    "diedYear": 2023,
+    "cause": "An end too grotesque for words.",
+    "epitaph": "It had great expectations and zero deliverables."
+  },
+  {
+    "name": "WeTrieve",
+    "bornYear": 2022,
+    "diedYear": 2023,
+    "cause": "The feedback was ‘cool idea’.",
+    "epitaph": "We had the spirit, but ignorance is bliss."
+  },
+  {
+    "name": "Tab Shepherd",
+    "bornYear": 2024,
+    "diedYear": 2024,
+    "cause": "The build stopped building.",
+    "epitaph": "It promised to organize 94 tabs. It became the 95th."
+  },
+  {
+    "name": "Meetingless",
+    "bornYear": 2022,
+    "diedYear": 2023,
+    "cause": "The feedback was ‘cool idea’.",
+    "epitaph": "Everyone loved it during the meeting."
+  },
+  {
+    "name": "Fridge Friend",
+    "bornYear": 2021,
+    "diedYear": 2022,
+    "cause": "Another startup shipped it first.",
+    "epitaph": "It recognized every ingredient except a viable business model."
+  },
+  {
+    "name": "Plant Parent Pro",
+    "bornYear": 2020,
+    "diedYear": 2021,
+    "cause": "The data never arrived.",
+    "epitaph": "The plants died waiting for the moisture data."
+  },
+  {
+    "name": "Moodboard AI",
+    "bornYear": 2025,
+    "diedYear": 2025,
+    "cause": "The API bill arrived.",
+    "epitaph": "Generated twelve images and one surprisingly large invoice."
+  },
+  {
+    "name": "LocalBites",
+    "bornYear": 2019,
+    "diedYear": 2020,
+    "cause": "Built but never launched.",
+    "epitaph": "A complete product, safely protected from all potential users."
+  },
+  {
+    "name": "Habit Goblin",
+    "bornYear": 2024,
+    "diedYear": 2025,
+    "cause": "Motivation not found.",
+    "epitaph": "Missed one daily check-in and was never seen again."
+  },
+  {
+    "name": "SplitFair",
+    "bornYear": 2022,
+    "diedYear": 2024,
+    "cause": "The users wanted something else.",
+    "epitaph": "Friends preferred Venmo and pretending they forgot."
+  },
+  {
+    "name": "Untitled Social App",
+    "bornYear": 2025,
+    "diedYear": 2026,
+    "cause": "Vibe coded too close to the sun.",
+    "epitaph": "It had users, features, and no known authentication model."
+  },
+  {
+    "name": "Inbox Oracle",
+    "bornYear": 2025,
+    "diedYear": 2026,
+    "cause": "The free tier expired.",
+    "epitaph": "It reached inbox zero and immediately lost server access."
+  },
+  {
+    "name": "Lunch Roulette",
+    "bornYear": 2021,
+    "diedYear": 2023,
+    "cause": "The domain expired.",
+    "epitaph": "The team went back to arguing in the group chat."
+  },
+  {
+    "name": "Focus Forest",
+    "bornYear": 2022,
+    "diedYear": 2022,
+    "cause": "Ran out of coffee.",
+    "epitaph": "The Pomodoro timer took an indefinite break."
+  },
+  {
+    "name": "Tiny CRM",
+    "bornYear": 2023,
+    "diedYear": 2025,
+    "cause": "Waiting on a design system.",
+    "epitaph": "The customers left before the buttons were finalized."
+  },
+  {
+    "name": "Weekend Weather",
+    "bornYear": 2018,
+    "diedYear": 2020,
+    "cause": "The API got deprecated.",
+    "epitaph": "The final forecast called for permanent downtime."
+  }
+]
