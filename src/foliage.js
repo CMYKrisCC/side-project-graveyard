@@ -1,11 +1,16 @@
-// The pine's canopy is entirely green already. What reads as "brown in the
-// leaves" is the trunk, which runs up between the tiers and shows through the
-// gaps. The whole tree is one mesh sharing one palette texture, so there is no
+// Kenney's pines are one mesh sharing one palette texture, so there is no
 // material to recolour — but every vertex points at a flat swatch in that
-// palette, and the brown one can simply be pointed at a green one instead.
-const TRUNK_UV = [0.219, 0.525]; // the tan swatch
-const DARK_GREEN_UV = [0.719, 0.705]; // darkest canopy green in the same palette
-const EPSILON = 0.01;
+// palette, and swatches can be swapped by moving the UV.
+//
+// Measured from pine.glb and pine-crooked.glb: all nine greens sit in the
+// palette column at u≈0.719, and all nine warm browns sit outside it (u≈0.219
+// for the trunk, u≈0.469 for the undersides of each canopy tier). So anything
+// off that column is the brown we want gone.
+const GREEN_COLUMN = 0.719;
+const COLUMN_EPSILON = 0.05;
+// Darkest green in the same column. Keeping undersides darker than tops
+// preserves the layered read of the tiers instead of flattening the tree.
+const DARK_GREEN = [0.719, 0.725];
 
 export function greenTrunk(scene) {
   if (scene.userData.trunkGreened) return false;
@@ -17,13 +22,9 @@ export function greenTrunk(scene) {
     if (!uv) return;
 
     for (let i = 0; i < uv.count; i++) {
-      if (
-        Math.abs(uv.getX(i) - TRUNK_UV[0]) < EPSILON &&
-        Math.abs(uv.getY(i) - TRUNK_UV[1]) < EPSILON
-      ) {
-        uv.setXY(i, DARK_GREEN_UV[0], DARK_GREEN_UV[1]);
-        touched += 1;
-      }
+      if (Math.abs(uv.getX(i) - GREEN_COLUMN) <= COLUMN_EPSILON) continue;
+      uv.setXY(i, DARK_GREEN[0], DARK_GREEN[1]);
+      touched += 1;
     }
 
     if (touched > 0) uv.needsUpdate = true;

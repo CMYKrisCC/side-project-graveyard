@@ -26,33 +26,43 @@ const PROPS = [
 
 PROPS.forEach((name) => useGLTF.preload(model(name)));
 
-export const YARD_RADIUS = 30;
-// The mausoleum stands here; nothing else may be planted in its footprint.
-export const MAUSOLEUM = { x: 0, z: -26, clearance: 11 };
+export const MAUSOLEUM_CLEARANCE = 11;
 
-const blocked = (x, z) =>
-  Math.hypot(x - MAUSOLEUM.x, z - MAUSOLEUM.z) < MAUSOLEUM.clearance;
+export const MAUSOLEUM_SETBACK = 6;
+
+export const mausoleumAt = (yardRadius) => ({ x: 0, z: -(yardRadius - MAUSOLEUM_SETBACK) });
+
+const blocked = (x, z, yardRadius) => {
+  const crypt = mausoleumAt(yardRadius);
+  return Math.hypot(x - crypt.x, z - crypt.z) < MAUSOLEUM_CLEARANCE;
+};
 
 // Re-rolls a scattered position until it lands clear of the mausoleum.
-function findSpot(random, minRadius, spread, attempts = 12) {
+function findSpot(random, minRadius, spread, yardRadius, attempts = 14) {
   for (let i = 0; i < attempts; i++) {
     const angle = random() * Math.PI * 2;
     const radius = minRadius + random() * spread;
     const x = Math.sin(angle) * radius;
     const z = Math.cos(angle) * radius;
-    if (!blocked(x, z)) return { x, z };
+    if (!blocked(x, z, yardRadius)) return { x, z };
   }
   return null;
 }
-const PATH_RINGS = [6.5, 11.5, 16.5, 21.5];
 const PATH_COLOR = "#1e1e2b";
+
+// A path between each ring of graves, however far out they now reach.
+const pathRings = (yardRadius) => {
+  const rings = [];
+  for (let radius = 6.5; radius < yardRadius - 6; radius += 5) rings.push(radius);
+  return rings;
+};
 const PROP_SCALE = 2;
 
 function measure(scene) {
   return new Box3().setFromObject(scene).getSize(new Vector3());
 }
 
-function Paths() {
+function Paths({ yardRadius }) {
   return (
     <group position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
       <mesh>
@@ -60,7 +70,7 @@ function Paths() {
         <meshStandardMaterial color={PATH_COLOR} roughness={1} />
       </mesh>
 
-      {PATH_RINGS.map((radius) => (
+      {pathRings(yardRadius).map((radius) => (
         <mesh key={radius}>
           <ringGeometry args={[radius - 0.75, radius + 0.75, 64]} />
           <meshStandardMaterial color={PATH_COLOR} roughness={1} />
@@ -69,7 +79,7 @@ function Paths() {
 
       {[0, 1, 2, 3].map((i) => (
         <mesh key={i} rotation={[0, 0, (i * Math.PI) / 2]}>
-          <planeGeometry args={[1.5, YARD_RADIUS - 4]} />
+          <planeGeometry args={[1.5, yardRadius - 4]} />
           <meshStandardMaterial color={PATH_COLOR} roughness={1} />
         </mesh>
       ))}
@@ -104,7 +114,7 @@ function Lantern({ position }) {
   );
 }
 
-function Fence() {
+function Fence({ yardRadius }) {
   const { scene } = useGLTF(model("iron-fence"));
   const { scene: gate } = useGLTF(model("iron-fence-border-gate"));
 
@@ -114,18 +124,18 @@ function Fence() {
     // circle's tangent is just rotation.y = angle — no extra quarter turn.
     const runsAlongX = size.x >= size.z;
     const span = (runsAlongX ? size.x : size.z) * PROP_SCALE;
-    const count = Math.max(24, Math.round((2 * Math.PI * YARD_RADIUS) / span));
+    const count = Math.max(24, Math.round((2 * Math.PI * yardRadius) / span));
 
     return Array.from({ length: count }, (_, i) => {
       const angle = (i / count) * Math.PI * 2;
       return {
         key: i,
         isGate: i === 0,
-        position: [Math.sin(angle) * YARD_RADIUS, 0, Math.cos(angle) * YARD_RADIUS],
+        position: [Math.sin(angle) * yardRadius, 0, Math.cos(angle) * yardRadius],
         rotation: runsAlongX ? angle : angle + Math.PI / 2,
       };
     });
-  }, [scene]);
+  }, [scene, yardRadius]);
 
   return segments.map(({ key, isGate, position, rotation }) => (
     <group key={key} position={position} rotation={[0, rotation, 0]}>
@@ -152,7 +162,7 @@ function Tree({ object, position, rotation, scale, shade }) {
   );
 }
 
-function Scatter() {
+function Scatter({ yardRadius }) {
   const pine = useGLTF(model("pine")).scene;
   const pineCrooked = useGLTF(model("pine-crooked")).scene;
   const rocks = [useGLTF(model("rocks")).scene, useGLTF(model("rocks-tall")).scene];
@@ -170,7 +180,7 @@ function Scatter() {
     const placed = [];
 
     for (let i = 0; i < 28; i++) {
-      const spot = findSpot(random, 23, 6);
+      const spot = findSpot(random, yardRadius - 7, 6, yardRadius);
       if (!spot) continue;
       grove.push({
         key: `tree-${i}`,
@@ -185,7 +195,7 @@ function Scatter() {
     // Rocks used to out-rank the graves: too many, too big, too pale, and
     // sitting among the plots. They belong at the edges as scenery.
     for (let i = 0; i < 9; i++) {
-      const spot = findSpot(random, 24, 5);
+      const spot = findSpot(random, yardRadius - 6, 5, yardRadius);
       if (!spot) continue;
       placed.push({
         key: `rock-${i}`,
@@ -209,9 +219,9 @@ function Scatter() {
 
     for (let i = 0; i < 3; i++) {
       const angle = (i / 3) * Math.PI * 2 + 1.1;
-      const x = Math.sin(angle) * 25.5;
-      const z = Math.cos(angle) * 25.5;
-      if (blocked(x, z)) continue;
+      const x = Math.sin(angle) * (yardRadius - 4.5);
+      const z = Math.cos(angle) * (yardRadius - 4.5);
+      if (blocked(x, z, yardRadius)) continue;
       placed.push({
         key: `crypt-${i}`,
         object: crypt,
@@ -222,7 +232,7 @@ function Scatter() {
     }
 
     for (let i = 0; i < 5; i++) {
-      const spot = findSpot(random, 20, 6);
+      const spot = findSpot(random, yardRadius - 10, 6, yardRadius);
       if (!spot) continue;
       placed.push({
         key: `urn-${i}`,
@@ -234,7 +244,7 @@ function Scatter() {
     }
 
     return { trees: grove, props: placed };
-  }, [pine, pineCrooked, rocks, bench, urn, crypt, trunk]);
+  }, [pine, pineCrooked, rocks, bench, urn, crypt, trunk, yardRadius]);
 
   return (
     <>
@@ -250,7 +260,7 @@ function Scatter() {
   );
 }
 
-function GroundMist() {
+function GroundMist({ yardRadius }) {
   const group = useRef();
 
   const texture = useMemo(() => {
@@ -274,7 +284,7 @@ function GroundMist() {
     const random = seeded(77123);
     return Array.from({ length: 6 }, (_, i) => {
       const angle = random() * Math.PI * 2;
-      const radius = 12 + random() * 16;
+      const radius = 12 + random() * (yardRadius - 14);
       return {
         key: i,
         position: [Math.sin(angle) * radius, 0.3 + random() * 0.5, Math.cos(angle) * radius],
@@ -282,7 +292,7 @@ function GroundMist() {
         drift: (random() - 0.5) * 0.03,
       };
     });
-  }, []);
+  }, [yardRadius]);
 
   useFrame((_, delta) => {
     if (!group.current) return;
@@ -303,22 +313,27 @@ function GroundMist() {
   );
 }
 
-export default function Scenery() {
-  const lanterns = useMemo(
-    () =>
-      Array.from({ length: 8 }, (_, i) => {
-        const angle = (i / 8) * Math.PI * 2 + Math.PI / 8;
-        return [Math.sin(angle) * 12.6, 0, Math.cos(angle) * 12.6];
-      }),
-    []
-  );
+export default function Scenery({ yardRadius }) {
+  // A lantern ring for each band of graves, so the outer rings don't sit in
+  // the dark as the graveyard grows.
+  const lanterns = useMemo(() => {
+    const lamps = [];
+    for (let radius = 12.6; radius < yardRadius - 6; radius += 13) {
+      const count = Math.max(8, Math.round((2 * Math.PI * radius) / 10));
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2 + Math.PI / count;
+        lamps.push([Math.sin(angle) * radius, 0, Math.cos(angle) * radius]);
+      }
+    }
+    return lamps;
+  }, [yardRadius]);
 
   return (
     <>
-      <Paths />
-      <Fence />
-      <Scatter />
-      <GroundMist />
+      <Paths yardRadius={yardRadius} />
+      <Fence yardRadius={yardRadius} />
+      <Scatter yardRadius={yardRadius} />
+      <GroundMist yardRadius={yardRadius} />
       {lanterns.map((position, i) => (
         <Lantern key={i} position={position} />
       ))}

@@ -19,7 +19,7 @@ import EmoteBar from "./EmoteBar";
 import { STALE_AFTER } from "./movement";
 import { audio } from "./audio";
 import { SoundOffIcon, SoundOnIcon } from "./icons";
-import { plotPosition } from "./layout";
+import { plotPosition, yardRadiusFor } from "./layout";
 import { graveIdFromUrl, showGraveInUrl } from "./deepLink";
 import { trackPointer, wasDrag } from "./pointer";
 import { useIsMobile } from "./useIsMobile";
@@ -60,6 +60,7 @@ function Scene({
   onSelect,
   onTravel,
   graves,
+  yardRadius,
   snapTo,
   isMobile,
   now,
@@ -113,8 +114,13 @@ function Scene({
       />
 
       <Suspense fallback={null}>
-        <Scenery />
-        <Mausoleum graves={graves} onSelect={onSelect} onTravel={onTravel} />
+        <Scenery yardRadius={yardRadius} />
+        <Mausoleum
+          graves={graves}
+          onSelect={onSelect}
+          onTravel={onTravel}
+          yardRadius={yardRadius}
+        />
         <Graves focusId={focusId} selectedId={selectedId} onSelect={onSelect} now={now} />
         <Caretaker graves={graves} ownPositionRef={ownPositionRef} />
         <Visitors moveRef={moveRef} ownPositionRef={ownPositionRef} spawn={spawn} />
@@ -169,6 +175,9 @@ export default function App() {
   const knownGraves = useRef(null);
   const checkedFlowers = useRef(false);
   const isMobile = useIsMobile();
+  // The graveyard grows outward as it fills, so the fence, treeline and
+  // mausoleum all move with it.
+  const yardRadius = yardRadiusFor(graves?.length ?? 0);
 
   // Candles burn down slowly, but the visitor count has to keep up with people
   // arriving and leaving.
@@ -289,6 +298,7 @@ export default function App() {
           onSelect={setSelectedId}
           onTravel={travelTo}
           graves={graves}
+          yardRadius={yardRadius}
           snapTo={snapTo}
           isMobile={isMobile}
           now={now}
@@ -324,6 +334,7 @@ export default function App() {
         ownPositionRef={ownPositionRef}
         onTravel={travelTo}
         selectedId={selectedId}
+        yardRadius={yardRadius}
       />
 
       <Toasts

@@ -11,13 +11,12 @@ const MANROPE = "/fonts/Manrope-Regular.ttf";
 const CINZEL = "/fonts/Cinzel-Bold.ttf";
 
 const SCALE = 3;
-const DEPTH = 26;
 // crypt-large is 1.0 tall and 2.4 deep before scaling; the roof stacks on top
 // and the front face is the +z side, which is the side visitors arrive from.
 const BODY_HEIGHT = 1 * SCALE;
 const FRONT = 1.2 * SCALE;
 
-export default function Mausoleum({ graves, onSelect, onTravel }) {
+export default function Mausoleum({ graves, onSelect, onTravel, yardRadius }) {
   const { scene: body } = useGLTF(model("crypt-large"));
   const { scene: roof } = useGLTF(model("crypt-large-roof"));
   const { scene: door } = useGLTF(model("crypt-large-door"));
@@ -32,7 +31,7 @@ export default function Mausoleum({ graves, onSelect, onTravel }) {
   }, [graves]);
 
   return (
-    <group position={[0, 0, -DEPTH]}>
+    <group position={[0, 0, -(yardRadius - 6)]}>
       {/* An approach path, so the walk out here reads as intentional. */}
       <mesh position={[0, 0.02, 9]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[3, 20]} />
