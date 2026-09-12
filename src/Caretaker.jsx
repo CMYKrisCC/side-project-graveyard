@@ -47,7 +47,8 @@ function chooseLine(graves) {
 
   const mourned = [...graves].sort((a, b) => b.flowers - a.flowers)[0];
   if (mourned && mourned.flowers > 0) {
-    return `${mourned.name} gets the most visitors. ${mourned.flowers} flowers and counting.`;
+    const flowers = mourned.flowers === 1 ? "1 flower" : `${mourned.flowers} flowers`;
+    return `${mourned.name} gets the most visitors. ${flowers} and counting.`;
   }
 
   return IDLE_LINES[Math.floor(Math.random() * IDLE_LINES.length)];
