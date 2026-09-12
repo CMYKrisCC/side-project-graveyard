@@ -331,6 +331,21 @@ export default function App() {
         Bury a project
       </button>
 
+      <p className="credit">
+        Music by{" "}
+        <a
+          href="https://pixabay.com/users/geoffharvey-9096471/"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Geoff Harvey
+        </a>{" "}
+        from{" "}
+        <a href="https://pixabay.com/music/" target="_blank" rel="noreferrer noopener">
+          Pixabay
+        </a>
+      </p>
+
       {selected && (
         <GravePanel grave={selected} onClose={() => setSelectedId(null)} onTravel={travelTo} />
       )}

@@ -169,6 +169,8 @@ canvas {
 .scrim {
   position: fixed;
   inset: 0;
+  /* Above the in-world speech bubbles, which are DOM overlays of their own. */
+  z-index: 30;
   display: grid;
   place-items: center;
   padding: 20px;
@@ -316,13 +318,20 @@ canvas {
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  max-height: 320px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a56 transparent;
   padding: 10px 8px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: #0b0b12;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+}
+
+.cause__menu.is-up {
+  top: auto;
+  bottom: calc(100% + 6px);
 }
 
 .cause__group + .cause__group {
@@ -463,6 +472,24 @@ canvas {
 
 .share button:hover {
   background: rgba(255, 255, 255, 0.06);
+}
+
+.credit {
+  position: fixed;
+  left: 190px;
+  bottom: 26px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--dim);
+  opacity: 0.5;
+}
+
+.credit a {
+  color: inherit;
+}
+
+.credit:hover {
+  opacity: 0.85;
 }
 
 .caretaker-line {
@@ -719,6 +746,10 @@ canvas {
     height: 104px;
   }
 
+  .credit {
+    display: none;
+  }
+
   .toasts {
     top: 70px;
     left: 14px;
@@ -792,7 +823,7 @@ canvas {
   }
 
   .cause__menu {
-    max-height: 260px;
+    max-height: 380px;
   }
 
   .actions {

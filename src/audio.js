@@ -20,10 +20,14 @@ const CHIME_PARTIALS = [
   { ratio: 5.4, gain: 0.12, decay: 0.5 },
 ];
 
+const MUSIC_SRC = "/music/spirits-of-the-moor.mp3";
+const MUSIC_LEVEL = 0.26;
+
 class GraveyardAudio {
   constructor() {
     this.ctx = null;
     this.master = null;
+    this.music = null;
     this.muted = false;
   }
 
@@ -41,7 +45,7 @@ class GraveyardAudio {
     this.master.gain.value = this.muted ? 0 : 1;
     this.master.connect(this.ctx.destination);
 
-    this._buildAmbience();
+    this._startMusic();
   }
 
   setMuted(muted) {
@@ -51,69 +55,28 @@ class GraveyardAudio {
     const now = this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);
     this.master.gain.linearRampToValueAtTime(muted ? 0 : 1, now + 0.4);
+
+    if (muted) this.music?.pause();
+    else this.music?.play().catch(() => {});
   }
 
-  _noiseBuffer(seconds) {
-    const length = Math.floor(this.ctx.sampleRate * seconds);
-    const buffer = this.ctx.createBuffer(1, length, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-
-    // Brown noise: integrating white noise tilts it toward low frequencies,
-    // which is what makes it read as wind instead of static.
-    let last = 0;
-    for (let i = 0; i < length; i++) {
-      const white = Math.random() * 2 - 1;
-      last = (last + 0.02 * white) / 1.02;
-      data[i] = last * 3.5;
-    }
-
-    return buffer;
-  }
-
-  _buildAmbience() {
+  // Streamed through an element rather than decoded into a buffer: two minutes
+  // of PCM would sit in memory for no benefit.
+  _startMusic() {
     const ctx = this.ctx;
 
-    const wind = ctx.createBufferSource();
-    wind.buffer = this._noiseBuffer(6);
-    wind.loop = true;
+    this.music = new Audio(MUSIC_SRC);
+    this.music.loop = true;
+    this.music.preload = "auto";
 
-    const windFilter = ctx.createBiquadFilter();
-    windFilter.type = "lowpass";
-    windFilter.frequency.value = 420;
-    windFilter.Q.value = 0.8;
+    const level = ctx.createGain();
+    level.gain.setValueAtTime(0.0001, ctx.currentTime);
+    level.gain.linearRampToValueAtTime(MUSIC_LEVEL, ctx.currentTime + 3);
 
-    const windGain = ctx.createGain();
-    windGain.gain.value = 0.14;
+    ctx.createMediaElementSource(this.music).connect(level).connect(this.master);
 
-    // Slow filter sweep so the wind breathes rather than sitting flat.
-    const sweep = ctx.createOscillator();
-    sweep.frequency.value = 0.05;
-    const sweepDepth = ctx.createGain();
-    sweepDepth.gain.value = 230;
-    sweep.connect(sweepDepth).connect(windFilter.frequency);
-
-    wind.connect(windFilter).connect(windGain).connect(this.master);
-    wind.start();
-    sweep.start();
-
-    const droneGain = ctx.createGain();
-    droneGain.gain.value = 0.035;
-    droneGain.connect(this.master);
-
-    for (const frequency of [55, 82.4]) {
-      const osc = ctx.createOscillator();
-      osc.type = "sine";
-      osc.frequency.value = frequency;
-      osc.connect(droneGain);
-      osc.start();
-    }
-
-    const tremolo = ctx.createOscillator();
-    tremolo.frequency.value = 0.08;
-    const tremoloDepth = ctx.createGain();
-    tremoloDepth.gain.value = 0.02;
-    tremolo.connect(tremoloDepth).connect(droneGain.gain);
-    tremolo.start();
+    // Autoplay can still be refused; the mute toggle re-triggers this.
+    this.music.play().catch(() => {});
   }
 
   _strike(partials, fundamental, level) {

@@ -69,6 +69,15 @@ below as they are added.
 
 ---
 
+## 2026-09-12 — Music, larger cause list
+
+- Replaced the synthesised wind ambience with a licensed background track.
+  The bell and flower chime are still synthesised.
+- Cause-of-death list is roughly twice as tall and measures the space
+  available, flipping above the field when there isn't room below.
+
+---
+
 ## Credits
 
 - Burning Token MCP — official rules, track briefs, and status.
@@ -79,5 +88,8 @@ below as they are added.
 - **Cinzel** (Bold) and **Manrope** (Regular, SemiBold) — SIL Open Font License
   1.1, via Google Fonts. Self-hosted in `public/fonts/` and used for both the
   3D headstone inscriptions and the interface.
-- Remaining third-party assets (audio) will be listed here with their licenses
-  as they are added.
+- **"Spirits of the Moor" by Geoff Harvey**, from Pixabay
+  (https://pixabay.com/users/geoffharvey-9096471/) under the Pixabay Content
+  License. Used as the looping background score, credited in-app. The source
+  file is kept in `assets-source/music/`; the shipped copy is re-encoded to
+  96 kbps to keep the download small.
