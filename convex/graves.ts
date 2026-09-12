@@ -19,17 +19,45 @@ export const list = query({
 
     return graves
       .filter((grave) => !grave.hidden)
-      .map(({ _id, plot, name, bornYear, diedYear, cause, epitaph, style, flowers }) => ({
-        _id,
-        plot,
-        name,
-        bornYear,
-        diedYear,
-        cause,
-        epitaph,
-        style,
-        flowers,
+      .map((grave) => ({
+        _id: grave._id,
+        buriedAt: grave._creationTime,
+        plot: grave.plot,
+        name: grave.name,
+        bornYear: grave.bornYear,
+        diedYear: grave.diedYear,
+        cause: grave.cause,
+        epitaph: grave.epitaph,
+        style: grave.style,
+        flowers: grave.flowers,
+        candleLitAt: grave.candleLitAt ?? null,
       }));
+  },
+});
+
+// Graves this visitor buried, so they can be told what happened while they
+// were away.
+export const mine = query({
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    const graves = await ctx.db
+      .query("graves")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .take(BURIALS_PER_SESSION);
+
+    return graves
+      .filter((grave) => !grave.hidden)
+      .map(({ _id, name, flowers }) => ({ _id, name, flowers }));
+  },
+});
+
+export const lightCandle = mutation({
+  args: { graveId: v.id("graves") },
+  handler: async (ctx, args) => {
+    const grave = await ctx.db.get(args.graveId);
+    if (!grave) return;
+
+    await ctx.db.patch(args.graveId, { candleLitAt: Date.now() });
   },
 });
 

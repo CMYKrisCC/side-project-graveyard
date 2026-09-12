@@ -161,15 +161,17 @@ function Scatter() {
       });
     }
 
-    for (let i = 0; i < 18; i++) {
+    // Rocks used to out-rank the graves: too many, too big, too pale, and
+    // sitting among the plots. They belong at the edges as scenery.
+    for (let i = 0; i < 9; i++) {
       const angle = random() * Math.PI * 2;
-      const radius = 8 + random() * 14;
+      const radius = 24 + random() * 5;
       placed.push({
         key: `rock-${i}`,
         object: rocks[Math.floor(random() * rocks.length)],
         position: [Math.sin(angle) * radius, 0, Math.cos(angle) * radius],
         rotation: random() * Math.PI * 2,
-        scale: 1.4 + random() * 0.9,
+        scale: 1 + random() * 0.6,
       });
     }
 
@@ -195,15 +197,15 @@ function Scatter() {
       });
     }
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 5; i++) {
       const angle = random() * Math.PI * 2;
-      const radius = 6 + random() * 16;
+      const radius = 20 + random() * 6;
       placed.push({
         key: `urn-${i}`,
         object: random() > 0.5 ? urn : trunk,
         position: [Math.sin(angle) * radius, 0, Math.cos(angle) * radius],
         rotation: random() * Math.PI * 2,
-        scale: 1.6,
+        scale: 1.5,
       });
     }
 

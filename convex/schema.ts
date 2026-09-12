@@ -14,6 +14,8 @@ export default defineSchema({
     flags: v.number(),
     hidden: v.boolean(),
     sessionId: v.string(),
+    // When the candle was last lit. Absent means it has never been lit.
+    candleLitAt: v.optional(v.number()),
   })
     .index("by_plot", ["plot"])
     .index("by_session", ["sessionId"]),

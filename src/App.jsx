@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Vector3 } from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Sparkles, Stars } from "@react-three/drei";
@@ -10,12 +10,17 @@ import Scenery from "./Scenery";
 import Visitors from "./Visitors";
 import BuryForm from "./BuryForm";
 import ShareCard from "./ShareCard";
+import GravePanel from "./GravePanel";
+import Minimap from "./Minimap";
+import Toasts from "./Toasts";
 import { audio } from "./audio";
 import { SoundOffIcon, SoundOnIcon } from "./icons";
 import { plotPosition } from "./layout";
 import { graveIdFromUrl, showGraveInUrl } from "./deepLink";
 import { trackPointer, wasDrag } from "./pointer";
 import { useIsMobile } from "./useIsMobile";
+import { getSessionId } from "./session";
+import { flowersSinceLastVisit } from "./flowerWatch";
 
 trackPointer();
 
@@ -42,7 +47,17 @@ function FollowCamera({ controls, ownPositionRef, snapTo }) {
   return null;
 }
 
-function Scene({ moveRef, ownPositionRef, spawn, focusId, snapTo, isMobile }) {
+function Scene({
+  moveRef,
+  ownPositionRef,
+  spawn,
+  focusId,
+  selectedId,
+  onSelect,
+  snapTo,
+  isMobile,
+  now,
+}) {
   const controls = useRef();
 
   return (
@@ -93,7 +108,7 @@ function Scene({ moveRef, ownPositionRef, spawn, focusId, snapTo, isMobile }) {
 
       <Suspense fallback={null}>
         <Scenery />
-        <Graves focusId={focusId} />
+        <Graves focusId={focusId} selectedId={selectedId} onSelect={onSelect} now={now} />
         <Visitors moveRef={moveRef} ownPositionRef={ownPositionRef} spawn={spawn} />
       </Suspense>
 
@@ -128,14 +143,33 @@ export default function App() {
   const [burying, setBurying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [buriedId, setBuriedId] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   const [focusId] = useState(() => graveIdFromUrl());
+  const [toasts, setToasts] = useState([]);
+  // Candles burn down in real time; this drives the flame without putting a
+  // clock in the render path of every grave.
+  const [now, setNow] = useState(() => Date.now());
+
+  const sessionId = getSessionId();
   const graves = useQuery(api.graves.list);
+  const myGraves = useQuery(api.graves.mine, { sessionId });
   const moveRef = useRef(() => {});
   const ownPositionRef = useRef(new Vector3(0, 0, 3));
   const knownGraves = useRef(null);
+  const checkedFlowers = useRef(false);
   const isMobile = useIsMobile();
 
-  // A shared link should put you at that grave, not at the gate.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  const pushToast = useCallback((toast) => {
+    const id = crypto.randomUUID();
+    setToasts((current) => [...current.slice(-2), { ...toast, id }]);
+    setTimeout(() => setToasts((current) => current.filter((item) => item.id !== id)), 9000);
+  }, []);
+
   const spawn = useMemo(() => {
     const target = graves?.find((grave) => grave._id === focusId);
     if (!target) return { x: 0, z: 3 };
@@ -145,6 +179,7 @@ export default function App() {
   }, [graves, focusId]);
 
   const snapTo = useMemo(() => (focusId && graves?.length ? spawn : null), [focusId, graves, spawn]);
+  const selected = graves?.find((grave) => grave._id === selectedId) ?? null;
 
   useEffect(() => {
     const begin = () => audio.start();
@@ -167,10 +202,40 @@ export default function App() {
       return;
     }
 
-    const buried = [...ids].some((id) => !knownGraves.current.has(id));
+    const arrivals = graves.filter((grave) => !knownGraves.current.has(grave._id));
     knownGraves.current = ids;
-    if (buried) audio.toll();
-  }, [graves]);
+
+    if (arrivals.length > 0) {
+      audio.toll();
+      const latest = arrivals[0];
+      pushToast({
+        message: `Someone just buried ${latest.name}.`,
+        actionLabel: "Go see it",
+        graveId: latest._id,
+        plot: latest.plot,
+      });
+    }
+  }, [graves, pushToast]);
+
+  useEffect(() => {
+    if (!myGraves || checkedFlowers.current) return;
+    checkedFlowers.current = true;
+
+    for (const grave of flowersSinceLastVisit(myGraves)) {
+      pushToast({
+        message: `${grave.name} got ${grave.gained} ${
+          grave.gained === 1 ? "flower" : "flowers"
+        } while you were away.`,
+        actionLabel: "Visit",
+        graveId: grave._id,
+      });
+    }
+  }, [myGraves, pushToast]);
+
+  const travelTo = useCallback((target) => {
+    const spot = typeof target.plot === "number" ? plotPosition(target.plot) : target;
+    moveRef.current({ x: spot.x * 0.9, z: spot.z * 0.9 });
+  }, []);
 
   const toggleSound = () => {
     audio.start();
@@ -186,6 +251,15 @@ export default function App() {
     showGraveInUrl(graveId);
   };
 
+  const onToastAction = (toast) => {
+    const grave = graves?.find((item) => item._id === toast.graveId);
+    if (grave) {
+      setSelectedId(grave._id);
+      travelTo(grave);
+    }
+    setToasts((current) => current.filter((item) => item.id !== toast.id));
+  };
+
   return (
     <>
       <Canvas
@@ -198,8 +272,11 @@ export default function App() {
           ownPositionRef={ownPositionRef}
           spawn={spawn}
           focusId={focusId}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
           snapTo={snapTo}
           isMobile={isMobile}
+          now={now}
         />
       </Canvas>
 
@@ -221,15 +298,34 @@ export default function App() {
         {muted ? <SoundOffIcon /> : <SoundOnIcon />}
       </button>
 
-      <p className="hint-bar">
-        {isMobile
-          ? "Tap the ground to walk · tap a grave to leave a flower"
-          : "Click the ground to walk · click a grave to leave a flower"}
-      </p>
+      <Minimap
+        graves={graves}
+        ownPositionRef={ownPositionRef}
+        onTravel={travelTo}
+        selectedId={selectedId}
+      />
+
+      <Toasts
+        toasts={toasts}
+        onAction={onToastAction}
+        onDismiss={(id) => setToasts((current) => current.filter((item) => item.id !== id))}
+      />
+
+      {!selected && (
+        <p className="hint-bar">
+          {isMobile
+            ? "Tap the ground to walk · tap a grave to visit it"
+            : "Click the ground to walk · click a grave to visit it"}
+        </p>
+      )}
 
       <button className="bury-cta" onClick={() => setBurying(true)}>
         Bury a project
       </button>
+
+      {selected && (
+        <GravePanel grave={selected} onClose={() => setSelectedId(null)} onTravel={travelTo} />
+      )}
 
       {burying && <BuryForm onClose={() => setBurying(false)} onBuried={onBuried} />}
       {buriedId && <ShareCard graveId={buriedId} onClose={() => setBuriedId(null)} />}

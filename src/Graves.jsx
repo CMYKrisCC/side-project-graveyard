@@ -1,14 +1,13 @@
 import { useMemo, useRef, useState } from "react";
 import { Box3, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
-import { useQuery, useMutation } from "convex/react";
-import { Billboard, Clone, Html, Text, useGLTF } from "@react-three/drei";
+import { useQuery } from "convex/react";
+import { Billboard, Clone, Text, useGLTF } from "@react-three/drei";
 import { api } from "../convex/_generated/api";
 import { plotPosition } from "./layout";
 import { memorialFor } from "./memorials";
-import { getSessionId } from "./session";
-import { audio } from "./audio";
 import { wasDrag } from "./pointer";
+import { candleLife, isFresh } from "./candles";
 
 const CINZEL = "/fonts/Cinzel-Bold.ttf";
 const MANROPE = "/fonts/Manrope-Regular.ttf";
@@ -32,8 +31,6 @@ STYLES.forEach((_, i) => useGLTF.preload(modelPath(i)));
 const STONE_SCALE = 2.2;
 const heightCache = new Map();
 
-// Stones differ a lot in height — an obelisk would otherwise grow straight
-// through the inscription — so each model's own top decides where its text sits.
 function stoneHeight(path, scene) {
   if (!heightCache.has(path)) {
     heightCache.set(path, new Box3().setFromObject(scene).max.y);
@@ -45,8 +42,6 @@ const NAME_SIZE = 0.26;
 const NAME_TOP = 0.62;
 const NAME_MAX_WIDTH = 3.1;
 const CHARS_PER_LINE = 22;
-// Inscriptions all face the camera, so distant ones would pile on top of each
-// other. Only the graves you are standing near get to speak.
 const READABLE_RANGE = 15;
 
 function Inscription({ grave }) {
@@ -110,25 +105,64 @@ function Inscription({ grave }) {
   );
 }
 
-function Grave({ grave, onFlower, isFocused }) {
+// A grave has to be findable from across the yard or it reads as scenery, so
+// every one carries a marker light. The candle on top of that is the part
+// visitors control, and the part that goes out.
+function GraveLight({ life, fresh }) {
+  const flame = useRef();
+  const glow = useRef();
+
+  useFrame(({ clock }) => {
+    if (!flame.current) return;
+    const flicker = 0.82 + Math.sin(clock.elapsedTime * 11) * 0.1 + Math.random() * 0.08;
+    // An unlit grave still glows faintly — dark enough to read as neglected,
+    // bright enough that you can find it from across the yard.
+    const strength = 0.5 + life * 0.5;
+    flame.current.scale.setScalar(flicker * (0.7 + life * 0.5));
+    if (glow.current) glow.current.intensity = (fresh ? 6.5 : 4.6) * strength * flicker;
+  });
+
+  return (
+    <group position={[0, 0.42, 0.85]}>
+      <mesh ref={flame}>
+        <sphereGeometry args={[0.085, 10, 10]} />
+        <meshBasicMaterial color={life > 0 ? "#ffcf8a" : "#93a0dd"} />
+      </mesh>
+      <pointLight
+        ref={glow}
+        color={life > 0 ? "#ffb066" : "#8a97e0"}
+        distance={life > 0 ? 8 : 5.5}
+        decay={2}
+      />
+    </group>
+  );
+}
+
+function Grave({ grave, onSelect, isFocused, isSelected, now }) {
   const path = modelPath(grave.style);
   const { scene } = useGLTF(path);
   const { x, z, angle } = plotPosition(grave.plot);
   const [hovered, setHovered] = useState(false);
   const inscription = useRef();
+
+  const life = candleLife(grave.candleLitAt, now);
+  const fresh = isFresh(grave.buriedAt, now);
+  // Mourning makes a monument: the more flowers, the taller it stands.
+  const scale = STONE_SCALE * (1 + Math.min(0.45, Math.log2(grave.flowers + 1) * 0.09));
   const textY = stoneHeight(path, scene) + 0.45;
   const anchor = useMemo(() => new Vector3(x, textY, z), [x, textY, z]);
 
   useFrame(({ camera }) => {
-    if (inscription.current) {
-      inscription.current.visible = camera.position.distanceTo(anchor) < READABLE_RANGE;
-    }
+    if (!inscription.current) return;
+    const near = camera.position.distanceTo(anchor) < READABLE_RANGE;
+    inscription.current.visible = near || isSelected || hovered;
   });
 
   return (
     <>
       <group position={[x, 0, z]} rotation={[0, angle, 0]}>
-        <Clone object={scene} scale={STONE_SCALE} castShadow receiveShadow />
+        <Clone object={scene} scale={scale} castShadow receiveShadow />
+        <GraveLight life={life} fresh={fresh} />
 
         <mesh
           position={[0, 1.1, 0.3]}
@@ -136,7 +170,7 @@ function Grave({ grave, onFlower, isFocused }) {
           onClick={(event) => {
             event.stopPropagation();
             if (wasDrag(event)) return;
-            onFlower(grave._id);
+            onSelect(grave._id);
           }}
           onPointerOver={(event) => {
             event.stopPropagation();
@@ -153,7 +187,7 @@ function Grave({ grave, onFlower, isFocused }) {
 
         {grave.flowers > 0 && (
           <Text
-            position={[0, 0.3, 0.9]}
+            position={[0, 0.3, 1.35]}
             font={MANROPE}
             fontSize={0.22}
             color="#e0b34d"
@@ -163,47 +197,34 @@ function Grave({ grave, onFlower, isFocused }) {
           </Text>
         )}
 
-        {isFocused && (
-          <>
-            <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-              <ringGeometry args={[1.5, 1.8, 40]} />
-              <meshBasicMaterial color="#e0b34d" transparent opacity={0.55} />
-            </mesh>
-            <pointLight position={[0, 1.6, 1.2]} color="#ffd98a" intensity={4} distance={7} />
-          </>
+        {(isFocused || isSelected) && (
+          <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[1.5, 1.75, 40]} />
+            <meshBasicMaterial color="#e0b34d" transparent opacity={0.5} />
+          </mesh>
         )}
       </group>
 
       <Billboard ref={inscription} position={[x, textY, z]}>
         <Inscription grave={grave} />
-
-        {hovered && grave.epitaph && (
-          <Html center position={[0, -0.78, 0]} distanceFactor={9} zIndexRange={[20, 0]}>
-            <div className="epitaph">{`“${grave.epitaph}”`}</div>
-          </Html>
-        )}
       </Billboard>
     </>
   );
 }
 
-export default function Graves({ focusId }) {
+export default function Graves({ focusId, selectedId, onSelect, now }) {
   const graves = useQuery(api.graves.list);
-  const leaveFlower = useMutation(api.graves.leaveFlower);
 
   if (!graves) return null;
-
-  const onFlower = async (graveId) => {
-    const result = await leaveFlower({ graveId, sessionId: getSessionId() });
-    if (result?.added) audio.chime();
-  };
 
   return graves.map((grave) => (
     <Grave
       key={grave._id}
       grave={grave}
-      onFlower={onFlower}
+      onSelect={onSelect}
       isFocused={grave._id === focusId}
+      isSelected={grave._id === selectedId}
+      now={now}
     />
   ));
 }
