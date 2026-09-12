@@ -31,6 +31,19 @@ yes/no prompt that only a human can answer, so an agent cannot deploy to
 production — always ask the user to run it. Production silently ran a
 days-old build for most of this project because every agent deploy went to dev.
 
+**The two deployments have separate databases.** Deploying code to production
+does not copy any data. `npm run seed` reads its target from `.env.local`, which
+points at dev, so seeded graves land in dev only. To seed production, override
+the target with the `.convex.cloud` URL (not `.convex.site`):
+
+```
+CONVEX_URL=https://successful-ermine-668.convex.cloud npm run seed scripts/seed.json
+```
+
+Check the target is empty first (`npx convex run --prod graves:list`) — session
+ids in the seed are deterministic, so running it twice on one deployment
+buries every project twice.
+
 ## Convex notes
 
 - Schema changes need `npx convex dev --once` before the client will see them.
