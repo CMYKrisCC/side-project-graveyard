@@ -5,12 +5,34 @@ const MAX_VISITORS = 40;
 // Keep visitors inside the fence rather than wandering off across empty ground.
 const YARD_RADIUS = 27;
 
+// The mausoleum is solid. Its footprint, plus a little margin.
+const CRYPT = { x: 0, z: -26, halfX: 3.6, halfZ: 4.4 };
+
 function insideYard(x: number, z: number) {
   const distance = Math.hypot(x, z);
   if (distance <= YARD_RADIUS) return { x, z };
 
   const scale = YARD_RADIUS / distance;
   return { x: x * scale, z: z * scale };
+}
+
+// Pushes a destination out of the crypt along whichever wall it is nearest.
+function outsideCrypt(x: number, z: number) {
+  const dx = x - CRYPT.x;
+  const dz = z - CRYPT.z;
+  if (Math.abs(dx) > CRYPT.halfX || Math.abs(dz) > CRYPT.halfZ) return { x, z };
+
+  const escapeX = CRYPT.halfX - Math.abs(dx);
+  const escapeZ = CRYPT.halfZ - Math.abs(dz);
+
+  return escapeX < escapeZ
+    ? { x: CRYPT.x + (dx >= 0 ? CRYPT.halfX : -CRYPT.halfX), z }
+    : { x, z: CRYPT.z + (dz >= 0 ? CRYPT.halfZ : -CRYPT.halfZ) };
+}
+
+function walkable(x: number, z: number) {
+  const bounded = insideYard(x, z);
+  return outsideCrypt(bounded.x, bounded.z);
 }
 
 export const list = query({
@@ -66,8 +88,8 @@ export const move = mutation({
       .first();
     if (!visitor) return;
 
-    const from = insideYard(args.fromX, args.fromZ);
-    const to = insideYard(args.toX, args.toZ);
+    const from = walkable(args.fromX, args.fromZ);
+    const to = walkable(args.toX, args.toZ);
     const now = Date.now();
 
     await ctx.db.patch(visitor._id, {

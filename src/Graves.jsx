@@ -31,15 +31,17 @@ STYLES.forEach((_, i) => useGLTF.preload(modelPath(i)));
 const STONE_SCALE = 2.2;
 const heightCache = new Map();
 
-function stoneHeight(path, scene) {
+function stoneHeight(path, scene, scale) {
   if (!heightCache.has(path)) {
     heightCache.set(path, new Box3().setFromObject(scene).max.y);
   }
-  return heightCache.get(path) * STONE_SCALE;
+  // Must use the grave's own scale: monuments grow with flowers, and a taller
+  // stone would otherwise push straight through its own inscription.
+  return heightCache.get(path) * scale;
 }
 
 const NAME_SIZE = 0.26;
-const NAME_TOP = 0.62;
+const NAME_TOP = 0.56;
 const NAME_MAX_WIDTH = 3.1;
 const CHARS_PER_LINE = 22;
 const READABLE_RANGE = 15;
@@ -51,7 +53,7 @@ function Inscription({ grave }) {
   return (
     <>
       <Text
-        position={[0, NAME_TOP + 0.16, 0]}
+        position={[0, NAME_TOP + 0.08, 0]}
         font={MANROPE}
         fontSize={0.1}
         letterSpacing={0.22}
@@ -79,7 +81,7 @@ function Inscription({ grave }) {
       </Text>
 
       <Text
-        position={[0, nameBottom - 0.07, 0]}
+        position={[0, nameBottom + 0.02, 0]}
         font={MANROPE}
         fontSize={0.14}
         color="#c3c2d6"
@@ -92,7 +94,7 @@ function Inscription({ grave }) {
       </Text>
 
       <Text
-        position={[0, nameBottom - 0.3, 0]}
+        position={[0, nameBottom - 0.2, 0]}
         font={MANROPE}
         fontSize={0.12}
         color="#8a89a6"
@@ -149,7 +151,7 @@ function Grave({ grave, onSelect, isFocused, isSelected, now }) {
   const fresh = isFresh(grave.buriedAt, now);
   // Mourning makes a monument: the more flowers, the taller it stands.
   const scale = STONE_SCALE * (1 + Math.min(0.45, Math.log2(grave.flowers + 1) * 0.09));
-  const textY = stoneHeight(path, scene) + 0.45;
+  const textY = stoneHeight(path, scene, scale) + 0.4;
   const anchor = useMemo(() => new Vector3(x, textY, z), [x, textY, z]);
 
   useFrame(({ camera }) => {

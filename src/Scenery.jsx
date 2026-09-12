@@ -3,6 +3,7 @@ import { Box3, CanvasTexture, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
 import { Clone, useGLTF } from "@react-three/drei";
 import { seeded } from "./random";
+import { greenTrunk } from "./foliage";
 
 const model = (name) => `/models/kenney-graveyard/${name}.glb`;
 
@@ -26,6 +27,23 @@ const PROPS = [
 PROPS.forEach((name) => useGLTF.preload(model(name)));
 
 export const YARD_RADIUS = 30;
+// The mausoleum stands here; nothing else may be planted in its footprint.
+export const MAUSOLEUM = { x: 0, z: -26, clearance: 11 };
+
+const blocked = (x, z) =>
+  Math.hypot(x - MAUSOLEUM.x, z - MAUSOLEUM.z) < MAUSOLEUM.clearance;
+
+// Re-rolls a scattered position until it lands clear of the mausoleum.
+function findSpot(random, minRadius, spread, attempts = 12) {
+  for (let i = 0; i < attempts; i++) {
+    const angle = random() * Math.PI * 2;
+    const radius = minRadius + random() * spread;
+    const x = Math.sin(angle) * radius;
+    const z = Math.cos(angle) * radius;
+    if (!blocked(x, z)) return { x, z };
+  }
+  return null;
+}
 const PATH_RINGS = [6.5, 11.5, 16.5, 21.5];
 const PATH_COLOR = "#1e1e2b";
 const PROP_SCALE = 2;
@@ -143,18 +161,21 @@ function Scatter() {
   const crypt = useGLTF(model("crypt-small")).scene;
   const trunk = useGLTF(model("trunk")).scene;
 
+  greenTrunk(pine);
+  greenTrunk(pineCrooked);
+
   const { trees, props } = useMemo(() => {
     const random = seeded(20260913);
     const grove = [];
     const placed = [];
 
     for (let i = 0; i < 28; i++) {
-      const angle = random() * Math.PI * 2;
-      const radius = 23 + random() * 6;
+      const spot = findSpot(random, 23, 6);
+      if (!spot) continue;
       grove.push({
         key: `tree-${i}`,
         object: random() > 0.45 ? pine : pineCrooked,
-        position: [Math.sin(angle) * radius, 0, Math.cos(angle) * radius],
+        position: [spot.x, 0, spot.z],
         rotation: random() * Math.PI * 2,
         scale: 2 + random() * 1.5,
         shade: random() - 0.5,
@@ -164,12 +185,12 @@ function Scatter() {
     // Rocks used to out-rank the graves: too many, too big, too pale, and
     // sitting among the plots. They belong at the edges as scenery.
     for (let i = 0; i < 9; i++) {
-      const angle = random() * Math.PI * 2;
-      const radius = 24 + random() * 5;
+      const spot = findSpot(random, 24, 5);
+      if (!spot) continue;
       placed.push({
         key: `rock-${i}`,
         object: rocks[Math.floor(random() * rocks.length)],
-        position: [Math.sin(angle) * radius, 0, Math.cos(angle) * radius],
+        position: [spot.x, 0, spot.z],
         rotation: random() * Math.PI * 2,
         scale: 1 + random() * 0.6,
       });
@@ -188,22 +209,25 @@ function Scatter() {
 
     for (let i = 0; i < 3; i++) {
       const angle = (i / 3) * Math.PI * 2 + 1.1;
+      const x = Math.sin(angle) * 25.5;
+      const z = Math.cos(angle) * 25.5;
+      if (blocked(x, z)) continue;
       placed.push({
         key: `crypt-${i}`,
         object: crypt,
-        position: [Math.sin(angle) * 25.5, 0, Math.cos(angle) * 25.5],
+        position: [x, 0, z],
         rotation: -angle,
         scale: 2.4,
       });
     }
 
     for (let i = 0; i < 5; i++) {
-      const angle = random() * Math.PI * 2;
-      const radius = 20 + random() * 6;
+      const spot = findSpot(random, 20, 6);
+      if (!spot) continue;
       placed.push({
         key: `urn-${i}`,
         object: random() > 0.5 ? urn : trunk,
-        position: [Math.sin(angle) * radius, 0, Math.cos(angle) * radius],
+        position: [spot.x, 0, spot.z],
         rotation: random() * Math.PI * 2,
         scale: 1.5,
       });
