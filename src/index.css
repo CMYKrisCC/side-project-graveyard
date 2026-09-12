@@ -77,6 +77,21 @@ canvas {
   color: var(--dim);
 }
 
+.hint-bar {
+  position: fixed;
+  bottom: 84px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
 .bury-cta {
   position: fixed;
   bottom: 28px;
