@@ -15,6 +15,8 @@ import ShareCard from "./ShareCard";
 import GravePanel from "./GravePanel";
 import Minimap from "./Minimap";
 import Toasts from "./Toasts";
+import EmoteBar from "./EmoteBar";
+import { STALE_AFTER } from "./movement";
 import { audio } from "./audio";
 import { SoundOffIcon, SoundOnIcon } from "./icons";
 import { plotPosition } from "./layout";
@@ -159,14 +161,19 @@ export default function App() {
   const sessionId = getSessionId();
   const graves = useQuery(api.graves.list);
   const myGraves = useQuery(api.graves.mine, { sessionId });
+  const visitors = useQuery(api.visitors.list);
+  const ghostsHere = (visitors ?? []).filter((visitor) => visitor.lastSeen > now - STALE_AFTER)
+    .length;
   const moveRef = useRef(() => {});
   const ownPositionRef = useRef(new Vector3(0, 0, 3));
   const knownGraves = useRef(null);
   const checkedFlowers = useRef(false);
   const isMobile = useIsMobile();
 
+  // Candles burn down slowly, but the visitor count has to keep up with people
+  // arriving and leaving.
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60000);
+    const id = setInterval(() => setNow(Date.now()), 5000);
     return () => clearInterval(id);
   }, []);
 
@@ -294,6 +301,12 @@ export default function App() {
           {graves === undefined
             ? "opening the gate…"
             : `${graves.length} ${graves.length === 1 ? "project rests" : "projects rest"} here`}
+          {ghostsHere > 0 && (
+            <span className="hud__ghosts">
+              {" · "}
+              {ghostsHere} {ghostsHere === 1 ? "ghost" : "ghosts"} wandering
+            </span>
+          )}
         </p>
       </header>
 
@@ -326,6 +339,8 @@ export default function App() {
             : "Click the ground to walk · click a grave to visit it"}
         </p>
       )}
+
+      <EmoteBar blocked={burying || Boolean(buriedId)} />
 
       <button className="bury-cta" onClick={() => setBurying(true)}>
         Bury a project

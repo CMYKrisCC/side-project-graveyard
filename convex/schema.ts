@@ -34,6 +34,8 @@ export default defineSchema({
     startedAt: v.number(),
     lastSeen: v.number(),
     tint: v.number(),
+    emote: v.optional(v.string()),
+    emoteAt: v.optional(v.number()),
   })
     .index("by_session", ["sessionId"])
     .index("by_lastSeen", ["lastSeen"]),

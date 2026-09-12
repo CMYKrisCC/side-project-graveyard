@@ -474,10 +474,67 @@ canvas {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.hud__ghosts {
+  color: #9fb4ff;
+}
+
+.emote-pop {
+  font-size: 26px;
+  line-height: 1;
+  pointer-events: none;
+  animation: emote-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+}
+
+@keyframes emote-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4) translateY(8px);
+  }
+}
+
+/* Left of centre: the grave panel owns the bottom-right corner. */
+.emote-bar {
+  position: fixed;
+  left: 186px;
+  bottom: 22px;
+  display: flex;
+  gap: 8px;
+}
+
+.emote-bar button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(14, 14, 20, 0.82);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  font: inherit;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease;
+}
+
+.emote-bar button:hover {
+  transform: translateY(-2px);
+  border-color: #3c3c56;
+}
+
+.emote-bar__key {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+
 .credit {
   position: fixed;
-  left: 190px;
-  bottom: 26px;
+  left: 22px;
+  top: 22px;
   margin: 0;
   font-size: 11px;
   color: var(--dim);
@@ -747,6 +804,21 @@ canvas {
   }
 
   .credit {
+    display: none;
+  }
+
+  .emote-bar {
+    left: auto;
+    right: 14px;
+    bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+    gap: 6px;
+  }
+
+  .emote-bar button {
+    padding: 10px;
+  }
+
+  .emote-bar__key {
     display: none;
   }
 

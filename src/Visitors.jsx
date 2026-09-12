@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { Html, useGLTF } from "@react-three/drei";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { getSessionId, getTint } from "./session";
 import { STALE_AFTER, visitorPosition } from "./movement";
+import { activeEmote, emotePose } from "./emotes";
 
 const GHOST = "/models/kenney-graveyard/character-ghost.glb";
 const GHOST_SCALE = 1.35;
@@ -12,9 +13,13 @@ const HEARTBEAT_MS = 10000;
 
 useGLTF.preload(GHOST);
 
-function Ghost({ visitor, isYou, ownPositionRef }) {
+function Ghost({ visitor, isYou, ownPositionRef, now }) {
   const { scene } = useGLTF(GHOST);
   const group = useRef();
+  const body = useRef();
+  // Derived from the query rather than set inside the frame loop, so an emote
+  // shows the moment the data lands.
+  const emote = activeEmote(visitor, now);
 
   const model = useMemo(() => {
     const clone = scene.clone(true);
@@ -34,16 +39,32 @@ function Ghost({ visitor, isYou, ownPositionRef }) {
     const { x, z, angle, walking } = visitorPosition(visitor, Date.now());
     const bob = Math.sin(clock.elapsedTime * (walking ? 6 : 2)) * (walking ? 0.09 : 0.05);
 
-    group.current.position.set(x, 0.35 + bob, z);
+    const current = activeEmote(visitor, Date.now());
+    const pose = emotePose(current, current ? (Date.now() - visitor.emoteAt) / 1000 : 0);
+
+    group.current.position.set(x, 0.35 + bob + pose.lift, z);
     group.current.rotation.y = angle;
+
+    if (body.current) {
+      body.current.rotation.z = pose.tilt;
+      body.current.rotation.x = pose.pitch;
+    }
 
     if (isYou && ownPositionRef) ownPositionRef.current.set(x, 0, z);
   });
 
   return (
     <group ref={group}>
-      <primitive object={model} scale={GHOST_SCALE} />
+      <group ref={body}>
+        <primitive object={model} scale={GHOST_SCALE} />
+      </group>
       <pointLight color="#9fb4ff" intensity={isYou ? 2.2 : 1.4} distance={4.5} decay={2} />
+
+      {emote && (
+        <Html center position={[0, 1.5, 0]} zIndexRange={[12, 0]}>
+          <div className="emote-pop">{emote.symbol}</div>
+        </Html>
+      )}
     </group>
   );
 }
@@ -56,6 +77,14 @@ export default function Visitors({ moveRef, ownPositionRef, spawn }) {
   const depart = useMutation(api.visitors.depart);
   const spawnX = spawn.x;
   const spawnZ = spawn.z;
+  // Emotes last a few seconds, so the list needs a clock of its own to expire
+  // them and to drop visitors who stopped sending heartbeats.
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 400);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const tint = getTint();
@@ -82,7 +111,7 @@ export default function Visitors({ moveRef, ownPositionRef, spawn }) {
 
   if (!visitors) return null;
 
-  const cutoff = Date.now() - STALE_AFTER;
+  const cutoff = now - STALE_AFTER;
 
   return visitors
     .filter((visitor) => visitor.lastSeen > cutoff)
@@ -92,6 +121,7 @@ export default function Visitors({ moveRef, ownPositionRef, spawn }) {
         visitor={visitor}
         isYou={visitor.sessionId === sessionId}
         ownPositionRef={ownPositionRef}
+        now={now}
       />
     ));
 }

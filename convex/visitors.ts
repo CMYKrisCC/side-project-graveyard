@@ -81,6 +81,24 @@ export const move = mutation({
   },
 });
 
+const EMOTES = ["wave", "bow", "mourn"];
+
+export const emote = mutation({
+  args: { sessionId: v.string(), emote: v.string() },
+  handler: async (ctx, args) => {
+    if (!EMOTES.includes(args.emote)) return;
+
+    const visitor = await ctx.db
+      .query("visitors")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .first();
+    if (!visitor) return;
+
+    const now = Date.now();
+    await ctx.db.patch(visitor._id, { emote: args.emote, emoteAt: now, lastSeen: now });
+  },
+});
+
 export const depart = mutation({
   args: { sessionId: v.string() },
   handler: async (ctx, args) => {
