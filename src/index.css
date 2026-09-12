@@ -465,6 +465,21 @@ canvas {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.caretaker-line {
+  /* Absolutely positioned, so it shrink-fits to nothing without this. */
+  width: max-content;
+  max-width: 280px;
+  padding: 11px 16px;
+  border: 1px solid rgba(224, 179, 77, 0.35);
+  border-radius: 12px;
+  background: rgba(14, 12, 8, 0.94);
+  color: #efe6d2;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  pointer-events: none;
+}
+
 .minimap {
   position: fixed;
   left: 22px;

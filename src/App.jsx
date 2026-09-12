@@ -8,6 +8,8 @@ import { api } from "../convex/_generated/api";
 import Graves from "./Graves";
 import Scenery from "./Scenery";
 import Visitors from "./Visitors";
+import Caretaker from "./Caretaker";
+import Mausoleum from "./Mausoleum";
 import BuryForm from "./BuryForm";
 import ShareCard from "./ShareCard";
 import GravePanel from "./GravePanel";
@@ -54,6 +56,8 @@ function Scene({
   focusId,
   selectedId,
   onSelect,
+  onTravel,
+  graves,
   snapTo,
   isMobile,
   now,
@@ -108,7 +112,9 @@ function Scene({
 
       <Suspense fallback={null}>
         <Scenery />
+        <Mausoleum graves={graves} onSelect={onSelect} onTravel={onTravel} />
         <Graves focusId={focusId} selectedId={selectedId} onSelect={onSelect} now={now} />
+        <Caretaker graves={graves} ownPositionRef={ownPositionRef} />
         <Visitors moveRef={moveRef} ownPositionRef={ownPositionRef} spawn={spawn} />
       </Suspense>
 
@@ -274,6 +280,8 @@ export default function App() {
           focusId={focusId}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          onTravel={travelTo}
+          graves={graves}
           snapTo={snapTo}
           isMobile={isMobile}
           now={now}
