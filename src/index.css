@@ -251,24 +251,94 @@ canvas {
   gap: 20px;
 }
 
-.select {
+.cause {
   position: relative;
-  display: block;
 }
 
-.select select {
-  appearance: none;
-  padding-right: 48px;
+.cause__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 14px 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  text-align: left;
   cursor: pointer;
 }
 
-.select__chevron {
+.cause__trigger:hover {
+  border-color: #35354f;
+}
+
+.cause__chevron {
+  flex: none;
+  opacity: 0.65;
+  transition: transform 160ms ease;
+}
+
+.cause__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.cause__menu {
   position: absolute;
-  top: 50%;
-  right: 14px;
-  transform: translateY(-50%);
+  z-index: 5;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0b0b12;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+}
+
+.cause__group + .cause__group {
+  margin-top: 14px;
+}
+
+/* Headings are labels, not choices — small, spaced, dim, and inert. */
+.cause__heading {
+  margin: 0 0 6px;
+  padding: 0 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #5c5c74;
   pointer-events: none;
-  opacity: 0.7;
+}
+
+.cause__option {
+  display: block;
+  width: 100%;
+  padding: 8px 10px 8px 22px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #d8d7e6;
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cause__option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+}
+
+.cause__option.is-selected {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
 }
 
 .error {
@@ -285,9 +355,9 @@ canvas {
 }
 
 .actions button {
-  padding: 13px 24px;
+  padding: 13px 26px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 999px;
   background: #fff;
   color: #0b0b14;
   font: inherit;

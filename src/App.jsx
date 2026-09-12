@@ -2,7 +2,7 @@ import { Suspense, useRef, useState } from "react";
 import { Vector3 } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Sparkles, Stars } from "@react-three/drei";
-import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
+import { Bloom, EffectComposer, HueSaturation, Vignette } from "@react-three/postprocessing";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import Graves from "./Graves";
@@ -29,13 +29,13 @@ function Scene({ moveRef, ownPositionRef }) {
   return (
     <>
       <color attach="background" args={["#05050c"]} />
-      <fog attach="fog" args={["#0b0b18", 18, 64]} />
+      <fog attach="fog" args={["#0c0c1a", 14, 58]} />
 
-      <hemisphereLight args={["#5b6bb0", "#0a0a12", 0.35]} />
+      <hemisphereLight args={["#49558f", "#090910", 0.3]} />
       <directionalLight
         position={[-22, 30, 12]}
-        intensity={0.75}
-        color="#b9c6ff"
+        intensity={0.62}
+        color="#aebbf5"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-34}
@@ -59,7 +59,7 @@ function Scene({ moveRef, ownPositionRef }) {
         }}
       >
         <circleGeometry args={[160, 64]} />
-        <meshStandardMaterial color="#14141f" roughness={1} />
+        <meshStandardMaterial color="#121220" roughness={1} />
       </mesh>
 
       <Sparkles count={70} scale={[46, 7, 46]} position={[0, 3, 0]} size={2.4} speed={0.3} color="#aab6ff" />
@@ -80,8 +80,11 @@ function Scene({ moveRef, ownPositionRef }) {
       <FollowCamera controls={controls} ownPositionRef={ownPositionRef} />
 
       <EffectComposer>
-        <Bloom intensity={0.7} luminanceThreshold={0.45} luminanceSmoothing={0.3} mipmapBlur />
-        <Vignette eskil={false} offset={0.24} darkness={0.82} />
+        {/* Kenney's palette is built for daylight; pulling saturation down and
+            nudging hue cool is what makes it read as one moonlit place. */}
+        <HueSaturation hue={-0.06} saturation={-0.2} />
+        <Bloom intensity={0.55} luminanceThreshold={0.5} luminanceSmoothing={0.32} mipmapBlur />
+        <Vignette eskil={false} offset={0.22} darkness={0.86} />
       </EffectComposer>
     </>
   );

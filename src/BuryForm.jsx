@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { CAUSE_GROUPS, CAUSES } from "../convex/causes";
+import { CAUSES } from "../convex/causes";
 import { getSessionId } from "./session";
-import { ChevronDownIcon, CloseIcon, GravestoneIcon } from "./icons";
+import { CloseIcon, GravestoneIcon } from "./icons";
+import CauseSelect from "./CauseSelect";
 
 const THIS_YEAR = new Date().getFullYear();
 
@@ -88,23 +89,10 @@ export default function BuryForm({ onClose }) {
           </label>
         </div>
 
-        <label className="field">
+        <div className="field">
           <span className="field__label">Cause of death</span>
-          <span className="select">
-            <select value={cause} onChange={(event) => setCause(event.target.value)}>
-              {CAUSE_GROUPS.map((group) => (
-                <optgroup key={group.label} label={group.label}>
-                  {group.causes.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-            <ChevronDownIcon className="select__chevron" />
-          </span>
-        </label>
+          <CauseSelect value={cause} onChange={setCause} />
+        </div>
 
         <label className="field">
           <span className="field__label">

@@ -2,6 +2,16 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 const MAX_VISITORS = 40;
+// Keep visitors inside the fence rather than wandering off across empty ground.
+const YARD_RADIUS = 27;
+
+function insideYard(x: number, z: number) {
+  const distance = Math.hypot(x, z);
+  if (distance <= YARD_RADIUS) return { x, z };
+
+  const scale = YARD_RADIUS / distance;
+  return { x: x * scale, z: z * scale };
+}
 
 export const list = query({
   args: {},
@@ -56,12 +66,15 @@ export const move = mutation({
       .first();
     if (!visitor) return;
 
+    const from = insideYard(args.fromX, args.fromZ);
+    const to = insideYard(args.toX, args.toZ);
     const now = Date.now();
+
     await ctx.db.patch(visitor._id, {
-      fromX: args.fromX,
-      fromZ: args.fromZ,
-      toX: args.toX,
-      toZ: args.toZ,
+      fromX: from.x,
+      fromZ: from.z,
+      toX: to.x,
+      toZ: to.z,
       startedAt: now,
       lastSeen: now,
     });
