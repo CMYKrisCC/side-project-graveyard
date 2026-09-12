@@ -75,6 +75,20 @@ at 89px wide is "working" and unreadable.
 - Dialogue and epitaph bubbles render at constant screen size. `distanceFactor`
   shrinks them into slivers.
 
+## Recolouring Kenney models
+
+Every model shares one palette texture, so a mesh cannot be recoloured through
+its material, and editing `Textures/colormap.png` repaints the whole world.
+`src/palette.js` instead moves UVs from one swatch to another, per model.
+
+Swatch coordinates are `u = x / 512`, `v = y / 512` in that PNG, top-left
+origin, no flip — so eyedropper a colour and divide its pixel position by 512.
+
+Measure before assuming which part is which. The pine has three palette columns:
+`u=0.219` is the trunk, `u=0.469` is the undersides of the canopy tiers, and
+`u=0.719` holds every green. Guessing that "brown = trunk" cost three wrong
+attempts; dumping vertex positions per column settled it in two minutes.
+
 ## Assets and licensing
 
 The rules require attribution, and the changelog is the record judges read.

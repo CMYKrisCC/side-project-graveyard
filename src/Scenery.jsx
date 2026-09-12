@@ -3,7 +3,7 @@ import { Box3, CanvasTexture, Vector3 } from "three";
 import { useFrame } from "@react-three/fiber";
 import { Clone, useGLTF } from "@react-three/drei";
 import { seeded } from "./random";
-import { greenTrunk } from "./foliage";
+import { IRONWORK_RULES, PINE_RULES, remapSwatches } from "./palette";
 
 const model = (name) => `/models/kenney-graveyard/${name}.glb`;
 
@@ -118,6 +118,9 @@ function Fence({ yardRadius }) {
   const { scene } = useGLTF(model("iron-fence"));
   const { scene: gate } = useGLTF(model("iron-fence-border-gate"));
 
+  remapSwatches(scene, IRONWORK_RULES, "ironGreyed");
+  remapSwatches(gate, IRONWORK_RULES, "ironGreyed");
+
   const segments = useMemo(() => {
     const size = measure(scene);
     // The panel is modelled along its X axis, so aligning local +X with the
@@ -171,8 +174,8 @@ function Scatter({ yardRadius }) {
   const crypt = useGLTF(model("crypt-small")).scene;
   const trunk = useGLTF(model("trunk")).scene;
 
-  greenTrunk(pine);
-  greenTrunk(pineCrooked);
+  remapSwatches(pine, PINE_RULES, "pineGreened");
+  remapSwatches(pineCrooked, PINE_RULES, "pineGreened");
 
   const { trees, props } = useMemo(() => {
     const random = seeded(20260913);
