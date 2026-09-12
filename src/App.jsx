@@ -1,6 +1,6 @@
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Vector3 } from "three";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Sparkles, Stars } from "@react-three/drei";
 import { Bloom, EffectComposer, HueSaturation, Vignette } from "@react-three/postprocessing";
 import { useQuery } from "convex/react";
@@ -9,12 +9,29 @@ import Graves from "./Graves";
 import Scenery from "./Scenery";
 import Visitors from "./Visitors";
 import BuryForm from "./BuryForm";
+import ShareCard from "./ShareCard";
 import { audio } from "./audio";
 import { SoundOffIcon, SoundOnIcon } from "./icons";
+import { plotPosition } from "./layout";
+import { graveIdFromUrl, showGraveInUrl } from "./deepLink";
+import { trackPointer, wasDrag } from "./pointer";
+import { useIsMobile } from "./useIsMobile";
 
-function FollowCamera({ controls, ownPositionRef }) {
+trackPointer();
+
+function FollowCamera({ controls, ownPositionRef, snapTo }) {
+  const { camera } = useThree();
+  const snapped = useRef(false);
+
   useFrame(() => {
     if (!controls.current) return;
+
+    if (snapTo && !snapped.current) {
+      snapped.current = true;
+      camera.position.set(snapTo.x + 6, 7, snapTo.z + 11);
+      controls.current.target.set(snapTo.x, 1.4, snapTo.z);
+    }
+
     controls.current.target.lerp(
       { x: ownPositionRef.current.x, y: 1.4, z: ownPositionRef.current.z },
       0.06
@@ -25,7 +42,7 @@ function FollowCamera({ controls, ownPositionRef }) {
   return null;
 }
 
-function Scene({ moveRef, ownPositionRef }) {
+function Scene({ moveRef, ownPositionRef, spawn, focusId, snapTo, isMobile }) {
   const controls = useRef();
 
   return (
@@ -38,7 +55,7 @@ function Scene({ moveRef, ownPositionRef }) {
         position={[-22, 30, 12]}
         intensity={0.62}
         color="#aebbf5"
-        castShadow
+        castShadow={!isMobile}
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-34}
         shadow-camera-right={34}
@@ -46,7 +63,7 @@ function Scene({ moveRef, ownPositionRef }) {
         shadow-camera-bottom={-34}
       />
 
-      <Stars radius={120} depth={40} count={1400} factor={3} fade speed={0.4} />
+      <Stars radius={120} depth={40} count={isMobile ? 600 : 1400} factor={3} fade speed={0.4} />
       <mesh position={[-38, 34, -46]}>
         <sphereGeometry args={[3.4, 24, 24]} />
         <meshBasicMaterial color="#e9ecff" />
@@ -54,9 +71,10 @@ function Scene({ moveRef, ownPositionRef }) {
 
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
+        receiveShadow={!isMobile}
         onClick={(event) => {
           event.stopPropagation();
+          if (wasDrag(event)) return;
           moveRef.current(event.point);
         }}
       >
@@ -64,12 +82,19 @@ function Scene({ moveRef, ownPositionRef }) {
         <meshStandardMaterial color="#121220" roughness={1} />
       </mesh>
 
-      <Sparkles count={70} scale={[46, 7, 46]} position={[0, 3, 0]} size={2.4} speed={0.3} color="#aab6ff" />
+      <Sparkles
+        count={isMobile ? 30 : 70}
+        scale={[46, 7, 46]}
+        position={[0, 3, 0]}
+        size={2.4}
+        speed={0.3}
+        color="#aab6ff"
+      />
 
       <Suspense fallback={null}>
         <Scenery />
-        <Graves />
-        <Visitors moveRef={moveRef} ownPositionRef={ownPositionRef} />
+        <Graves focusId={focusId} />
+        <Visitors moveRef={moveRef} ownPositionRef={ownPositionRef} spawn={spawn} />
       </Suspense>
 
       <OrbitControls
@@ -79,14 +104,21 @@ function Scene({ moveRef, ownPositionRef }) {
         maxDistance={54}
         maxPolarAngle={Math.PI / 2.15}
       />
-      <FollowCamera controls={controls} ownPositionRef={ownPositionRef} />
+      <FollowCamera controls={controls} ownPositionRef={ownPositionRef} snapTo={snapTo} />
 
       <EffectComposer>
         {/* Kenney's palette is built for daylight; pulling saturation down and
             nudging hue cool is what makes it read as one moonlit place. */}
         <HueSaturation hue={-0.06} saturation={-0.2} />
-        <Bloom intensity={0.55} luminanceThreshold={0.5} luminanceSmoothing={0.32} mipmapBlur />
-        <Vignette eskil={false} offset={0.22} darkness={0.86} />
+        {/* Bloom is the most expensive pass here and phones feel it first. */}
+        {isMobile ? (
+          <Vignette eskil={false} offset={0.22} darkness={0.86} />
+        ) : (
+          <>
+            <Bloom intensity={0.55} luminanceThreshold={0.5} luminanceSmoothing={0.32} mipmapBlur />
+            <Vignette eskil={false} offset={0.22} darkness={0.86} />
+          </>
+        )}
       </EffectComposer>
     </>
   );
@@ -95,12 +127,25 @@ function Scene({ moveRef, ownPositionRef }) {
 export default function App() {
   const [burying, setBurying] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [buriedId, setBuriedId] = useState(null);
+  const [focusId] = useState(() => graveIdFromUrl());
   const graves = useQuery(api.graves.list);
   const moveRef = useRef(() => {});
   const ownPositionRef = useRef(new Vector3(0, 0, 3));
   const knownGraves = useRef(null);
+  const isMobile = useIsMobile();
 
-  // Browsers refuse to start audio until the visitor has interacted.
+  // A shared link should put you at that grave, not at the gate.
+  const spawn = useMemo(() => {
+    const target = graves?.find((grave) => grave._id === focusId);
+    if (!target) return { x: 0, z: 3 };
+
+    const { x, z } = plotPosition(target.plot);
+    return { x: x * 0.86, z: z * 0.86 };
+  }, [graves, focusId]);
+
+  const snapTo = useMemo(() => (focusId && graves?.length ? spawn : null), [focusId, graves, spawn]);
+
   useEffect(() => {
     const begin = () => audio.start();
     window.addEventListener("pointerdown", begin, { once: true });
@@ -135,10 +180,27 @@ export default function App() {
     });
   };
 
+  const onBuried = (graveId) => {
+    setBurying(false);
+    setBuriedId(graveId);
+    showGraveInUrl(graveId);
+  };
+
   return (
     <>
-      <Canvas shadows camera={{ position: [0, 7, 22], fov: 45 }} dpr={[1, 1.75]}>
-        <Scene moveRef={moveRef} ownPositionRef={ownPositionRef} />
+      <Canvas
+        shadows={!isMobile}
+        camera={{ position: [0, 7, 22], fov: isMobile ? 55 : 45 }}
+        dpr={isMobile ? [1, 1.4] : [1, 1.75]}
+      >
+        <Scene
+          moveRef={moveRef}
+          ownPositionRef={ownPositionRef}
+          spawn={spawn}
+          focusId={focusId}
+          snapTo={snapTo}
+          isMobile={isMobile}
+        />
       </Canvas>
 
       <header className="hud">
@@ -159,13 +221,18 @@ export default function App() {
         {muted ? <SoundOffIcon /> : <SoundOnIcon />}
       </button>
 
-      <p className="hint-bar">Click the ground to walk · click a grave to leave a flower</p>
+      <p className="hint-bar">
+        {isMobile
+          ? "Tap the ground to walk · tap a grave to leave a flower"
+          : "Click the ground to walk · click a grave to leave a flower"}
+      </p>
 
       <button className="bury-cta" onClick={() => setBurying(true)}>
         Bury a project
       </button>
 
-      {burying && <BuryForm onClose={() => setBurying(false)} />}
+      {burying && <BuryForm onClose={() => setBurying(false)} onBuried={onBuried} />}
+      {buriedId && <ShareCard graveId={buriedId} onClose={() => setBuriedId(null)} />}
     </>
   );
 }

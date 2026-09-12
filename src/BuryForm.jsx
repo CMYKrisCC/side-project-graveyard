@@ -8,7 +8,7 @@ import CauseSelect from "./CauseSelect";
 
 const THIS_YEAR = new Date().getFullYear();
 
-export default function BuryForm({ onClose }) {
+export default function BuryForm({ onClose, onBuried }) {
   const bury = useMutation(api.graves.bury);
   const [name, setName] = useState("");
   const [bornYear, setBornYear] = useState(THIS_YEAR - 1);
@@ -24,7 +24,7 @@ export default function BuryForm({ onClose }) {
     setError("");
 
     try {
-      await bury({
+      const graveId = await bury({
         name,
         bornYear: Number(bornYear),
         diedYear: Number(diedYear),
@@ -32,7 +32,7 @@ export default function BuryForm({ onClose }) {
         epitaph,
         sessionId: getSessionId(),
       });
-      onClose();
+      onBuried(graveId);
     } catch (caught) {
       const message = String(caught?.message ?? caught);
       setError(message.split("Uncaught Error:").pop().split(" at handler")[0].trim());

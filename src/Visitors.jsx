@@ -8,7 +8,6 @@ import { STALE_AFTER, visitorPosition } from "./movement";
 
 const GHOST = "/models/kenney-graveyard/character-ghost.glb";
 const GHOST_SCALE = 1.35;
-const SPAWN = { x: 0, z: 3 };
 const HEARTBEAT_MS = 10000;
 
 useGLTF.preload(GHOST);
@@ -49,19 +48,21 @@ function Ghost({ visitor, isYou, ownPositionRef }) {
   );
 }
 
-export default function Visitors({ moveRef, ownPositionRef }) {
+export default function Visitors({ moveRef, ownPositionRef, spawn }) {
   const sessionId = getSessionId();
   const visitors = useQuery(api.visitors.list);
   const arrive = useMutation(api.visitors.arrive);
   const move = useMutation(api.visitors.move);
   const depart = useMutation(api.visitors.depart);
+  const spawnX = spawn.x;
+  const spawnZ = spawn.z;
 
   useEffect(() => {
     const tint = getTint();
-    arrive({ sessionId, x: SPAWN.x, z: SPAWN.z, tint });
+    arrive({ sessionId, x: spawnX, z: spawnZ, tint });
 
     const beat = setInterval(() => {
-      arrive({ sessionId, x: SPAWN.x, z: SPAWN.z, tint });
+      arrive({ sessionId, x: spawnX, z: spawnZ, tint });
     }, HEARTBEAT_MS);
 
     const leave = () => depart({ sessionId });
@@ -72,7 +73,7 @@ export default function Visitors({ moveRef, ownPositionRef }) {
       window.removeEventListener("pagehide", leave);
       leave();
     };
-  }, [arrive, depart, sessionId]);
+  }, [arrive, depart, sessionId, spawnX, spawnZ]);
 
   moveRef.current = (point) => {
     const from = ownPositionRef.current;

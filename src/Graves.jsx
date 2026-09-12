@@ -8,6 +8,7 @@ import { plotPosition } from "./layout";
 import { memorialFor } from "./memorials";
 import { getSessionId } from "./session";
 import { audio } from "./audio";
+import { wasDrag } from "./pointer";
 
 const CINZEL = "/fonts/Cinzel-Bold.ttf";
 const MANROPE = "/fonts/Manrope-Regular.ttf";
@@ -109,7 +110,7 @@ function Inscription({ grave }) {
   );
 }
 
-function Grave({ grave, onFlower }) {
+function Grave({ grave, onFlower, isFocused }) {
   const path = modelPath(grave.style);
   const { scene } = useGLTF(path);
   const { x, z, angle } = plotPosition(grave.plot);
@@ -134,6 +135,7 @@ function Grave({ grave, onFlower }) {
           visible={false}
           onClick={(event) => {
             event.stopPropagation();
+            if (wasDrag(event)) return;
             onFlower(grave._id);
           }}
           onPointerOver={(event) => {
@@ -160,6 +162,16 @@ function Grave({ grave, onFlower }) {
             {`❀ ${grave.flowers}`}
           </Text>
         )}
+
+        {isFocused && (
+          <>
+            <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <ringGeometry args={[1.5, 1.8, 40]} />
+              <meshBasicMaterial color="#e0b34d" transparent opacity={0.55} />
+            </mesh>
+            <pointLight position={[0, 1.6, 1.2]} color="#ffd98a" intensity={4} distance={7} />
+          </>
+        )}
       </group>
 
       <Billboard ref={inscription} position={[x, textY, z]}>
@@ -175,7 +187,7 @@ function Grave({ grave, onFlower }) {
   );
 }
 
-export default function Graves() {
+export default function Graves({ focusId }) {
   const graves = useQuery(api.graves.list);
   const leaveFlower = useMutation(api.graves.leaveFlower);
 
@@ -186,5 +198,12 @@ export default function Graves() {
     if (result?.added) audio.chime();
   };
 
-  return graves.map((grave) => <Grave key={grave._id} grave={grave} onFlower={onFlower} />);
+  return graves.map((grave) => (
+    <Grave
+      key={grave._id}
+      grave={grave}
+      onFlower={onFlower}
+      isFocused={grave._id === focusId}
+    />
+  ));
 }
