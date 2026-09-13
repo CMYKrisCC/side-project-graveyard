@@ -57,3 +57,9 @@ Designed and built by Kris Shogren ([@CMYKrisCC](https://github.com/CMYKrisCC)),
 - **3D models:** [Graveyard Kit](https://kenney.nl) by Kenney — CC0.
 - **Fonts:** Cinzel and Manrope — SIL Open Font License. License texts are in [`public/fonts`](public/fonts).
 - **Music:** "Spirits of the Moor" by [Geoff Harvey](https://pixabay.com/users/geoffharvey-9096471/) from [Pixabay](https://pixabay.com/music/).
+
+## License
+
+The source code is released under the [MIT License](LICENSE).
+
+That license covers the code only. The third-party assets listed under Credits keep their own licenses: the Kenney models are CC0, the fonts are under the SIL Open Font License, and the music is used under the Pixabay Content License, which does not permit redistributing the track on its own.
