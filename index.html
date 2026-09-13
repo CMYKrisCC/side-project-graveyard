@@ -10,6 +10,191 @@
     />
   </head>
   <body>
+    <!-- The loader is plain HTML so it paints before the JavaScript bundle
+         arrives; src/Loader.jsx takes it over once React is running. -->
+    <style>
+      #loader {
+        --progress: 0;
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(ellipse at 50% 62%, #131328 0%, #05050c 72%);
+        color: #e8e6f3;
+        font-family: "Manrope", system-ui, sans-serif;
+        transition: opacity 700ms ease, filter 700ms ease;
+      }
+
+      #loader.is-done {
+        opacity: 0;
+        filter: blur(6px);
+        pointer-events: none;
+      }
+
+      .loader__stage {
+        width: min(380px, 76vw);
+        text-align: center;
+      }
+
+      /* Declared here as well as in index.css: that stylesheet arrives with the
+         JavaScript, and the title has to be in Cinzel before then. */
+      @font-face {
+        font-family: "Cinzel";
+        src: url("/fonts/Cinzel-Bold.ttf") format("truetype");
+        font-weight: 700;
+        font-display: swap;
+      }
+
+      .loader__title {
+        margin: 0 0 76px;
+        font-family: "Cinzel", Georgia, serif;
+        font-weight: 700;
+        font-size: clamp(18px, 3.2vw, 24px);
+        letter-spacing: 0.08em;
+        animation: loader-flicker 4.2s infinite;
+      }
+
+      .loader__track {
+        position: relative;
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .loader__fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: calc(var(--progress) * 100%);
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(120, 130, 210, 0.12), rgba(160, 170, 240, 0.5) 62%, #ffcf8a);
+        box-shadow: 0 0 12px rgba(255, 207, 138, 0.5);
+        transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+        animation: loader-estimate 18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+
+      .loader__ghost {
+        position: absolute;
+        bottom: 10px;
+        left: calc(var(--progress) * 100%);
+        width: 44px;
+        transform: translateX(-50%);
+        transition: left 420ms cubic-bezier(0.22, 1, 0.36, 1);
+        animation: loader-estimate-ghost 18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+
+      /* A faint ectoplasm trail left behind as it drifts. */
+      .loader__ghost::before {
+        content: "";
+        position: absolute;
+        right: 55%;
+        bottom: 10px;
+        width: 72px;
+        height: 18px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, transparent, rgba(190, 200, 255, 0.24));
+        filter: blur(6px);
+      }
+
+      .loader__ghost svg {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: auto;
+        filter: drop-shadow(0 0 10px rgba(170, 185, 255, 0.55));
+        animation: loader-bob 1.4s ease-in-out infinite;
+      }
+
+      /* Before React: a crawl that never stalls — quick at first, then slowing
+         toward 62% so a slow connection never looks frozen. Once React takes
+         over, real progress drives it. */
+      #loader.is-live .loader__fill,
+      #loader.is-live .loader__ghost {
+        animation: none;
+      }
+
+      .loader__status {
+        margin: 22px 0 0;
+        min-height: 1em;
+        font-size: 11px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #8a89a6;
+      }
+
+      .loader__status.is-in {
+        animation: loader-line 420ms ease both;
+      }
+
+      @keyframes loader-estimate {
+        0% { width: 0%; }
+        8% { width: 26%; }
+        100% { width: 62%; }
+      }
+
+      @keyframes loader-estimate-ghost {
+        0% { left: 0%; }
+        8% { left: 26%; }
+        100% { left: 62%; }
+      }
+
+      @keyframes loader-bob {
+        0%, 100% { transform: translateY(0) rotate(8deg); }
+        50% { transform: translateY(-6px) rotate(3deg); }
+      }
+
+      @keyframes loader-flicker {
+        0%, 18%, 22%, 60%, 64%, 100% {
+          opacity: 0.94;
+          text-shadow: 0 0 18px rgba(255, 207, 138, 0.2);
+        }
+        20%, 62% {
+          opacity: 0.5;
+          text-shadow: none;
+        }
+      }
+
+      @keyframes loader-line {
+        from { opacity: 0; transform: translateY(4px); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .loader__title,
+        .loader__ghost svg {
+          animation: none;
+        }
+      }
+    </style>
+
+    <div id="loader" role="status" aria-label="Loading the graveyard">
+      <div class="loader__stage">
+        <p class="loader__title">Side Project Graveyard</p>
+        <div class="loader__track">
+          <div class="loader__fill"></div>
+          <div class="loader__ghost" aria-hidden="true">
+            <svg viewBox="0 0 64 72">
+              <path
+                fill="#e9ecff"
+                fill-opacity="0.92"
+                d="M32 4C17 4 8 15 8 30V62L16 56L24 64L32 56L40 64L48 56L56 62V30C56 15 47 4 32 4Z"
+              >
+                <animate
+                  attributeName="d"
+                  dur="0.9s"
+                  repeatCount="indefinite"
+                  values="M32 4C17 4 8 15 8 30V62L16 56L24 64L32 56L40 64L48 56L56 62V30C56 15 47 4 32 4Z;M32 4C17 4 8 15 8 30V58L16 64L24 56L32 64L40 56L48 64L56 58V30C56 15 47 4 32 4Z;M32 4C17 4 8 15 8 30V62L16 56L24 64L32 56L40 64L48 56L56 62V30C56 15 47 4 32 4Z"
+                />
+              </path>
+              <ellipse cx="24" cy="30" rx="3.4" ry="4.6" fill="#1a1a2e" />
+              <ellipse cx="40" cy="30" rx="3.4" ry="4.6" fill="#1a1a2e" />
+              <ellipse cx="32" cy="42" rx="3" ry="4" fill="#1a1a2e" />
+            </svg>
+          </div>
+        </div>
+        <p class="loader__status">Digging up the past…</p>
+      </div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

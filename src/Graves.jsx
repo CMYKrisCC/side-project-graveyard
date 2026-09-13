@@ -214,19 +214,43 @@ function Grave({ grave, onSelect, isFocused, isSelected, now }) {
   );
 }
 
+let sceneReady = false;
+
+export const isSceneReady = () => sceneReady;
+
+// Frames to wait after mounting. The first few are spent compiling shaders and
+// uploading textures, and on a slow machine they present an empty ground.
+const SETTLE_FRAMES = 12;
+
+// Mounted inside the scene's Suspense boundary, after the graves have arrived,
+// so its frames only run once every model has loaded.
+function SceneReady() {
+  const frames = useRef(0);
+  useFrame(() => {
+    frames.current += 1;
+    if (frames.current >= SETTLE_FRAMES) sceneReady = true;
+  });
+  return null;
+}
+
 export default function Graves({ focusId, selectedId, onSelect, now }) {
   const graves = useQuery(api.graves.list);
 
   if (!graves) return null;
 
-  return graves.map((grave) => (
-    <Grave
-      key={grave._id}
-      grave={grave}
-      onSelect={onSelect}
-      isFocused={grave._id === focusId}
-      isSelected={grave._id === selectedId}
-      now={now}
-    />
-  ));
+  return (
+    <>
+      {graves.map((grave) => (
+        <Grave
+          key={grave._id}
+          grave={grave}
+          onSelect={onSelect}
+          isFocused={grave._id === focusId}
+          isSelected={grave._id === selectedId}
+          now={now}
+        />
+      ))}
+      <SceneReady />
+    </>
+  );
 }

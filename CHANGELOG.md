@@ -75,6 +75,11 @@ below as they are added.
   The bell and flower chime are still synthesised.
 - Cause-of-death list is roughly twice as tall and measures the space
   available, flipping above the field when there isn't room below.
+- Loading screen: a ghost drifts along a candlelit progress bar while the
+  models download. It is plain HTML in `index.html`, so it paints before the
+  JavaScript bundle arrives, then tracks real asset progress and stays up
+  until the graveyard has actually rendered. Verified on a throttled Slow 3G
+  production build.
 
 ---
 
